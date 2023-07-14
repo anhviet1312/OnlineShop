@@ -105,7 +105,7 @@ namespace ShopOnline.Areas.Identity.Pages
 					// callbackUrl = /Account/ConfirmEmail?userId=useridxx&code=codexxxx
 					// Link trong email người dùng bấm vào, nó sẽ gọi Page: /Acount/ConfirmEmail để xác nhận
 					var callbackUrl = Url.Page(
-						"/Account/ConfirmEmail",
+						"/ConfirmEmail",
 						pageHandler: null,
 						values: new { area = "Identity", userId = user.Id, code = code, returnURL = returnURL },
 						protocol: Request.Scheme);
