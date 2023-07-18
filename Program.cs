@@ -44,6 +44,13 @@ builder.Services.Configure<IdentityOptions>(options => {
     options.SignIn.RequireConfirmedPhoneNumber = false;     // Xác thực số điện thoại
 
 });
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.AccessDeniedPath = null;
+    options.LoginPath = "/Identity/Login";
+});
+
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
