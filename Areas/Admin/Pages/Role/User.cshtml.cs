@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using ShopOnline.Models;
 
 namespace ShopOnline.Areas.Admin.Pages.Role
 {
+    [Authorize(Roles = "Admin")]
     public class UserModel : PageModel
     {
         const int USER_PER_PAGE = 2;

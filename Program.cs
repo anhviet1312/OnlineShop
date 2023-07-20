@@ -46,7 +46,7 @@ builder.Services.Configure<IdentityOptions>(options => {
 });
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.AccessDeniedPath = null;
+    options.AccessDeniedPath = "/Identity/AccessDenied";
     options.LoginPath = "/Identity/Login";
 });
 
