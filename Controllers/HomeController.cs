@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopOnline.Models;
 
@@ -17,7 +18,7 @@ namespace ShopOnline.Controllers
         {
             return View();
         }
-
+        [Authorize(Policy = "StaffPolicy")]
         public IActionResult Privacy()
         {
             return View();

@@ -49,7 +49,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Identity/AccessDenied";
     options.LoginPath = "/Identity/Login";
 });
-
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("StaffPolicy", policy =>
+    {
+        policy.RequireRole("Staff");
+    });
+});
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
