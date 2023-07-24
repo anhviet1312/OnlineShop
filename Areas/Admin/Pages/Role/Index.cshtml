@@ -29,6 +29,12 @@
                             Update Role
                         </button>
                     </form>
+                <form method="get" class="d-inline">
+                    <button name="roleId" value="@role.Id" class="btn btn-success btn-sm"
+                        asp-page="../RoleClaim/Index">
+                        Role Claim
+                    </button>
+                </form>
                     <form method="post" class="d-inline">
                         <button name="Input.ID" value="@role.Id" class="btn btn-success btn-sm"
                             asp-page="./Delete">

@@ -55,6 +55,10 @@ builder.Services.AddAuthorization(options =>
     {
         policy.RequireRole("Staff");
     });
+    options.AddPolicy("CanView", policy => {
+        // policy.RequireRole("Editor");
+        policy.RequireClaim("permision", "post.view");
+    });
 });
 
 builder.Services.AddControllersWithViews();
