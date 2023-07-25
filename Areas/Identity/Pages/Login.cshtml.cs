@@ -38,17 +38,17 @@ namespace ShopOnline.Areas.Identity.Pages
 
         public class InputModel
         {
-            [Required(ErrorMessage = "Không để trống")]
-            [Display(Name = "Nhập username hoặc email của bạn")]
-            [StringLength(100, MinimumLength = 1, ErrorMessage = "Nhập đúng thông tin")]
+            [Required(ErrorMessage = "Required")]
+            [Display(Name = "Username or email")]
+            [StringLength(100, MinimumLength = 1, ErrorMessage = "Invalid")]
             public string UserNameOrEmail { set; get; }
 
             [Required]
             [DataType(DataType.Password)]
-            [Display(Name = "Mật khẩu")]
+            [Display(Name = "Password")]
             public string Password { get; set; }
 
-            [Display(Name = "Nhớ thông tin đăng nhập?")]
+            [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
         }
 
@@ -103,13 +103,14 @@ namespace ShopOnline.Areas.Identity.Pages
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User đã đăng nhập");
+                    _logger.LogInformation("User login successful");
                     return ViewComponent(MessagePage.COMPONENTNAME, new MessagePage.Message()
                     {
-                        title = "Đã đăng nhập",
-                        htmlcontent = "Đăng nhập thành công",
-                        urlredirect = returnUrl
-                    });
+                        title = "User log in",
+                        htmlcontent = "Login successful",
+                        urlredirect = returnUrl,
+                        secondwait = 1
+                    }) ;
                 }
                 if (result.RequiresTwoFactor)
                 {
@@ -118,13 +119,13 @@ namespace ShopOnline.Areas.Identity.Pages
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("Tài khoản bí tạm khóa.");
+                    _logger.LogWarning("Account is temporarily locked.");
                     // Chuyển hướng đến trang Lockout - hiện thị thông báo
                     return RedirectToPage("./Lockout");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Không đăng nhập được.");
+                    ModelState.AddModelError(string.Empty, "Login failed.");
                     return Page();
                 }
             }

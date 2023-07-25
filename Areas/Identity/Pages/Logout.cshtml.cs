@@ -30,9 +30,10 @@ namespace ShopOnline.Areas.Identity.Pages
                 {
                     title = "Đã đăng xuất",
                     htmlcontent = "Đăng xuất thành công",
-                    urlredirect = returnUrl ?? Url.Page("/Index")
+                    urlredirect = returnUrl ?? Url.Page("/Index"),
+                    secondwait = 1
                 }
-            );
+            ); ;
         }
     }
 }
