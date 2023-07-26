@@ -21,7 +21,7 @@ namespace ShopOnline.Areas.Identity.Pages.Account
             _signInManager = signInManager;
         }
 
-        [Display(Name = "Tên tài khoản")]
+        [Display(Name = "Username")]
         public string Username { get; set; }
 
         [TempData]
@@ -36,11 +36,14 @@ namespace ShopOnline.Areas.Identity.Pages.Account
             [Display(Name = "Phone Number")]
             public string? PhoneNumber { get; set; }
 
-            [MaxLength(100)]
+            [MaxLength(50)]
             [Display(Name = "First Name")]
             public string? FirstName { set; get; }
-
             [MaxLength(100)]
+            [Display(Name = "Address")]
+            public string? Address { set; get; }
+
+            [MaxLength(50)]
             [Display(Name = "Last Name")]
             public string? LastName { set; get; }
 
@@ -63,6 +66,7 @@ namespace ShopOnline.Areas.Identity.Pages.Account
             {
                 PhoneNumber = phoneNumber,
                 Birthday = user.Dob,
+                Address = user.Address,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
             };
@@ -111,6 +115,7 @@ namespace ShopOnline.Areas.Identity.Pages.Account
             user.Dob = (DateTime)Input.Birthday;
             user.FirstName = Input.FirstName;
             user.LastName = Input.LastName;
+            user.Address = Input.Address;
             await _userManager.UpdateAsync(user);
 
             // Đăng nhập lại để làm mới Cookie (không nhớ thông tin cũ)
