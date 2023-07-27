@@ -75,7 +75,7 @@ namespace ShopOnline.Areas.Identity.Pages.Account
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Khôg nạp được tài khoản ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Not found user with ID '{_userManager.GetUserId(User)}'.");
             }
 
             if (!ModelState.IsValid)
@@ -91,7 +91,7 @@ namespace ShopOnline.Areas.Identity.Pages.Account
                 var code = await _userManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                 var callbackUrl = Url.Page(
-                    "ConfirmEmailChange",
+                    "../ConfirmEmailChange",
                     pageHandler: null,
                     values: new { userId = userId, email = Input.NewEmail, code = code },
                     protocol: Request.Scheme);

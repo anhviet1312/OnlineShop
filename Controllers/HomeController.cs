@@ -18,7 +18,7 @@ namespace ShopOnline.Controllers
         {
             return View();
         }
-        [Authorize(Policy = "StaffPolicy")]
+        [Authorize(Policy = "InGenz")]
         public IActionResult Privacy()
         {
             return View();

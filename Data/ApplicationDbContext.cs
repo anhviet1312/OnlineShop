@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using ShopOnline.Data.Configurations;
 using ShopOnline.Models;
 
 namespace ShopOnline.Data
@@ -15,6 +16,8 @@ namespace ShopOnline.Data
         {
 
             base.OnModelCreating(builder);
+            builder.ApplyConfiguration(new AppUserConfiguration());
+
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
                 var tableName = entityType.GetTableName();

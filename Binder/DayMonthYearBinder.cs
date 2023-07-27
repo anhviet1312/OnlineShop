@@ -41,12 +41,12 @@ namespace ShopOnline.Binder
             catch
             {
 
-                bindingContext.ModelState.TryAddModelError(modelName, "Nhập ngày tháng bị sai - yêu cầu định dạng dd/MM/yyyy (ví dụ 20/11/2020)");
+                bindingContext.ModelState.TryAddModelError(modelName, "Format should be dd/MM/yyyy (ex: 20/11/2020)");
                 return Task.CompletedTask;
             }
             if (date < DateTime.Parse("1/1/1945"))
             {
-                bindingContext.ModelState.TryAddModelError(modelName, "Abcs");
+                bindingContext.ModelState.TryAddModelError(modelName, "The birthday is ealier than 1/1/1945");
                 return Task.CompletedTask;
 
             }
