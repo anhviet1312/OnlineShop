@@ -1,0 +1,47 @@
+﻿@page "/admin/role"
+@model ShopOnline.Areas.Admin.Pages.Role.IndexModel
+<h3>List role</h3>
+    <partial name="_StatusMessage" model="@Model.StatusMessage" />
+
+    <form method="POST" class="my-1 d-inline">
+        <button class="btn btn-secondary" asp-page="./Add"
+                asp-page-handler="StartNewRole">
+            Create new role
+        </button>
+    </form>
+    <a class="btn btn-secondary" asp-page="./User">Set role for an user</a>
+
+    <table class="table">
+        <tr>
+            <th>Role ID</th>
+            <th>Role Name</th>
+            <th>Action</th>
+        </tr>
+        @foreach (var role in @Model.roles)
+        {
+            <tr>
+                <td>@role.Id</td>
+                <td>@role.Name</td>
+                <td>
+                    <form method="POST" class="d-inline">
+                        <button name="Input.ID" value="@role.Id" class="btn btn-success btn-sm"
+                            asp-page="./Add" asp-page-handler="StartUpdate">
+                            Update Role
+                        </button>
+                    </form>
+                <form method="get" class="d-inline">
+                    <button name="roleId" value="@role.Id" class="btn btn-success btn-sm"
+                        asp-page="../RoleClaim/Index">
+                        Role Claim
+                    </button>
+                </form>
+                    <form method="post" class="d-inline">
+                        <button name="Input.ID" value="@role.Id" class="btn btn-success btn-sm"
+                            asp-page="./Delete">
+                            Delete Role
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </table>

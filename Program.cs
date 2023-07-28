@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using ShopOnline.Areas.Identity.AuthorizationHandler;
 using ShopOnline.Data;
 using ShopOnline.Models;
 
@@ -44,10 +46,32 @@ builder.Services.Configure<IdentityOptions>(options => {
     options.SignIn.RequireConfirmedPhoneNumber = false;     // Xác thực số điện thoại
 
 });
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.AccessDeniedPath = "/Identity/AccessDenied";
+    options.LoginPath = "/Identity/Login";
+});
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("StaffPolicy", policy =>
+    {
+        policy.RequireRole("Staff");
+    });
+    options.AddPolicy("CanView", policy => {
+        // policy.RequireRole("Editor");
+        policy.RequireClaim("permision", "post.view");
+    });
+    options.AddPolicy("InGenZ", policyBuilder => {
+        // ... code sử dụng Requirement hoặc thêm các yêu cầu về Role, Claim
+        policyBuilder.Requirements.Add(new GenZrequirement(1997, 2012));
+    });
+});
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 builder.Services.AddTransient<IEmailSender, SendMailService>();
+builder.Services.AddTransient<IAuthorizationHandler, AppAuthorizationHandler>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

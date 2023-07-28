@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace ShopOnline.Models
 {
@@ -8,6 +9,8 @@ namespace ShopOnline.Models
 
         public string? LastName { get; set; }
 
+        public string? Address { get; set; }    
+        
         public DateTime Dob { get; set; }
     }
 }
