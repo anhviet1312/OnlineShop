@@ -20,7 +20,7 @@ namespace ShopOnline.Models
         public string CustomerMobile { set; get; }
 
         
-        public string CustomerMessage { set; get; }
+        public string? CustomerMessage { set; get; }
 
         
         public string PaymentMethod { set; get; }

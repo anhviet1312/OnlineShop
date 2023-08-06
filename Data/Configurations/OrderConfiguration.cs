@@ -22,7 +22,7 @@ namespace ShopOnline.Data.Configurations
             entity.Property(e => e.CreatedBy);
             entity.Property(e => e.PaymentStatus);
             entity.Property(e => e.Status);
-            entity.Property(e => e.CustomerId).HasMaxLength(128).HasColumnType("nvarchar");
+            entity.Property(e => e.CustomerId).HasMaxLength(450).HasColumnType("nvarchar");
 
             
             entity.HasOne(e => e.User)

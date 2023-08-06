@@ -7,6 +7,7 @@ namespace ShopOnline.Data
 {
     public class ApplicationDbContext : IdentityDbContext<AppUser>
     {
+        public ApplicationDbContext(): base() { }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
