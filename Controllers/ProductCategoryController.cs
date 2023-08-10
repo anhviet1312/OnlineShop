@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using ShopOnline.Models.ViewModels;
 
 namespace ShopOnline.Controllers
 {
@@ -13,20 +14,24 @@ namespace ShopOnline.Controllers
         private readonly IProductCategoryRepository _productCategoryRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
+        private readonly ILogger<ProductCategoryController> _logger;
 
         public ProductCategoryController(IProductCategoryRepository productCategoryRepository, IMapper mapper, 
-                                         UserManager<AppUser> userManager)
+                                         UserManager<AppUser> userManager,
+                                         ILogger<ProductCategoryController> logger)
         {
             _productCategoryRepository = productCategoryRepository;
             _mapper = mapper;
             _userManager = userManager;
+            _logger = logger;
         }
 
         // GET: ProductCategoryController
         public async Task<ActionResult> Index()
         {
-            var productCategories = await _productCategoryRepository.GetAllAsync();
-            return View(productCategories);
+            var viewProductCategory = new ViewProductCategoryModel();
+            viewProductCategory.ProductCategories = (List<ProductCategory>) await _productCategoryRepository.GetAllAsync();
+            return View(viewProductCategory);
         }
 
         // GET: ProductCategoryController/Create
@@ -64,24 +69,48 @@ namespace ShopOnline.Controllers
         }
 
         // GET: ProductCategoryController/Edit/5
-        public ActionResult Edit(int id)
+        public async Task<ActionResult> Edit(int id)
         {
-            return View();
+            var x = await _productCategoryRepository.GetByIdAsync(id);
+            return Json(x);
         }
 
         // POST: ProductCategoryController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, ProductCategory productCategory)
+        public async Task<ActionResult> Edit(int categoryId, CreateProductCategoryDto CreateOrUpdate)
         {
             try
             {
-                // TODO: Implement the logic to update the product category in the repository
+                if (ModelState.IsValid)
+                {
+                    // Get the existing product category from the repository
+                    var existingCategory = _productCategoryRepository.GetByIdAsync(categoryId).Result;
+
+                    // Map the updated data from the CreateOrUpdate DTO to the existing category
+                    _mapper.Map(CreateOrUpdate, existingCategory);
+
+                    // Set the UpdatedDate and UpdatedBy fields
+                    string userId = _userManager.GetUserId(User);
+                    var user = await _userManager.FindByIdAsync(userId);
+                    existingCategory.UpdatedDate = DateTime.UtcNow;
+                    existingCategory.UpdatedBy = user.UserName;
+
+                    // Update the category in the repository
+                    await _productCategoryRepository.UpdateAsync(existingCategory);
+
+                    // Save changes to the repository
+                    await _productCategoryRepository.SaveAsync();
+
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // If ModelState is not valid, return to the edit view with validation errors
                 return RedirectToAction(nameof(Index));
             }
             catch
             {
-                return View();
+                return RedirectToAction(nameof(Index));
             }
         }
 
