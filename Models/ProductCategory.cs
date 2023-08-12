@@ -17,7 +17,7 @@ namespace ShopOnline.Models
         public int? ParentID { set; get; }
         public int? DisplayOrder { set; get; }
 
-        public string Image { set; get; }
+        public string? Image { set; get; }
 
         public bool? HomeFlag { set; get; }
 

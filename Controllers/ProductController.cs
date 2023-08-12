@@ -9,6 +9,7 @@ using ShopOnline.Models;
 using ShopOnline.Models.CreateModels;
 using ShopOnline.Repository;
 using Microsoft.AspNetCore.Identity;
+using ShopOnline.Models.ViewModels;
 
 namespace ShopOnline.Controllers
 {
@@ -39,8 +40,16 @@ namespace ShopOnline.Controllers
         }
         public async Task<ActionResult> Index()
         {
-            var products = await _productRepository.GetAllAsync();
-            return View(products);
+            var productViewModel = new ViewProductModel();
+            var categories = await _productCategoryRepository.GetAllAsync();
+            var tags = await _tagRepository.GetAllAsync();
+            productViewModel.Products = await _productRepository.GetAllAsync();
+            productViewModel.CreateOrUpdate = new CreateProductDto
+            {
+                ListCategories = (List<ProductCategory>)categories,
+                ListTags = (List<Tag>)tags
+            };
+            return View(productViewModel);
         }
 
         // GET: ProductController/Details/5
@@ -111,25 +120,80 @@ namespace ShopOnline.Controllers
         }
 
         // GET: ProductController/Edit/5
-        public ActionResult Edit(int id)
+        public async Task<ActionResult> Edit(int id)
         {
-            return View();
+            var product = await _productRepository.GetProductByIdAsync(id);
+            return Json(product);
         }
 
         // POST: ProductController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<ActionResult> Edit(int productid, CreateProductDto createOrUpdate)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    // Get the existing product from the repository
+                    var existingProduct = await _productRepository.GetProductByIdAsync(productid);
+
+                    if (existingProduct == null)
+                    {
+                        // If the product doesn't exist, return not found
+                        return NotFound();
+                    }
+
+                    // Map the updated data from the createOrUpdate to the existing product
+                    _mapper.Map(createOrUpdate, existingProduct);
+
+                    // Set the UpdatedDate and UpdatedBy fields
+                    string userId = _userManager.GetUserId(User);
+                    var user = await _userManager.FindByIdAsync(userId);
+                    existingProduct.UpdatedDate = DateTime.UtcNow;
+                    existingProduct.UpdatedBy = user.UserName;
+
+                    // Clear existing product tags and update with the new ones
+                    existingProduct.ProductTags.Clear();
+                    if (createOrUpdate.ListSelectedTags != null)
+                    {
+                        foreach (var tagId in createOrUpdate.ListSelectedTags)
+                        {
+                            var productTag = new ProductTag
+                            {
+                                ProductID = existingProduct.ID,
+                                TagID = tagId
+                            };
+                            existingProduct.ProductTags.Add(productTag);
+                        }
+                    }
+
+                    // Update the product in the repository
+                    await _productRepository.UpdateAsync(existingProduct);
+
+                    // Save changes to the repository
+                    await _productRepository.SaveAsync();
+
+                    return RedirectToAction(nameof(Index));
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                return View();
+                // Log the exception for troubleshooting
+                _logger.LogError(ex, "An error occurred while editing the product.");
+
+                // Add an error message to ModelState
+                ModelState.AddModelError(string.Empty, "An error occurred while editing the product.");
             }
+
+            // If ModelState is not valid or an error occurred, return to the edit view with validation errors
+            var categories = await _productCategoryRepository.GetAllAsync();
+            var tags = await _tagRepository.GetAllAsync();
+            createOrUpdate.ListCategories = (List<ProductCategory>)categories;
+            createOrUpdate.ListTags = (List<Tag>)tags;
+            return RedirectToAction(nameof(Index));
         }
+
 
         // GET: ProductController/Delete/5
         public ActionResult Delete(int id)

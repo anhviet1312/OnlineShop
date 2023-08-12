@@ -60,8 +60,7 @@ namespace ShopOnline.Controllers
                 await _productCategoryRepository.AddAsync(productCategory);
 
                 await _productCategoryRepository.SaveAsync();
-
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction(nameof(Index));
             }
 
             // If ModelState is not valid, return to the create view with validation errors

@@ -101,10 +101,6 @@
                 @Html.DisplayFor(modelItem => item.UpdatedBy)
             </td>
                 <td>
-                    @*<a asp-action="Edit" asp-route-id="@item.ID" data-bs-toggle="modal" data-bs-target="#editModal">Edit</a> |*@
-                @*<a asp-action="Details" asp-route-id="@item.ID"    >Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.    ID">Delete</a>*@
-
                     <button onclick="Edit(@item.ID)" class="btn btn-primary">Edit</button>
             </td>
         </tr>
@@ -112,18 +108,13 @@
     </tbody>
 </table>
 
-<!-- Button trigger modal -->
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-    Launch demo modal
-</button>
-
 <!-- Modal -->
 
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Edit Product Category</h5>
+                <h5 class="modal-title" id="editModalLabel">Edit Product</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editForm" asp-action="Edit" method="post">
