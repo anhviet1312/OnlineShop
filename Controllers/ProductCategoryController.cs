@@ -6,9 +6,11 @@ using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ShopOnline.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ShopOnline.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ProductCategoryController : Controller
     {
         private readonly IProductCategoryRepository _productCategoryRepository;
@@ -120,18 +122,43 @@ namespace ShopOnline.Controllers
         }
 
         // POST: ProductCategoryController/Delete/5
+        // POST: ProductCategoryController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Delete(int? id)
         {
-            if (id == null)
+            try
             {
-                // If id is not provided, return a bad request response
-                return BadRequest();
-            }
+                if (id == null)
+                {
+                    // If id is not provided, return a bad request response
+                    return BadRequest();
+                }
 
-            await _productCategoryRepository.DeleteAsync(id.Value);
-            return RedirectToAction(nameof(Index));
+                // Retrieve the product category by its ID
+                var categoryToDelete = await _productCategoryRepository.GetByIdAsync(id.Value);
+
+                if (categoryToDelete == null)
+                {
+                    // If the category does not exist, return a not found response
+                    return NotFound();
+                }
+
+                // Delete the product category from the repository
+                await _productCategoryRepository.DeleteAsync(id.Value);
+
+                // Save changes to the repository
+                await _productCategoryRepository.SaveAsync();
+
+                // Redirect to the index page
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                // If an error occurs, redirect to the index page
+                return RedirectToAction(nameof(Index));
+            }
         }
+
     }
 }

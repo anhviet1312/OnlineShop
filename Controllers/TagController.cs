@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ShopOnline.Interface;
 using ShopOnline.Models;
+using ShopOnline.Models.ViewModels;
+using ShopOnline.Repository;
 using System.Threading.Tasks;
 
 namespace ShopOnline.Controllers
@@ -9,17 +12,23 @@ namespace ShopOnline.Controllers
     public class TagController : Controller
     {
         private readonly ITagRepository _tagRepository;
+        private readonly ILogger<TagController> _logger;
+        private readonly UserManager<AppUser> _userManager;
 
-        public TagController(ITagRepository tagRepository)
+        public TagController(ITagRepository tagRepository, ILogger<TagController> logger, UserManager<AppUser> userManager)
         {
             _tagRepository = tagRepository;
+            _logger = logger;
+            _userManager = userManager;
         }
 
         // GET: TagController
         public async Task<ActionResult> Index()
         {
-            var tags = await _tagRepository.GetAllAsync();
-            return View(tags);
+            var viewTagModel = new ViewTagModel();
+
+            viewTagModel.Tags = (List<Tag>) await _tagRepository.GetAllAsync();
+            return View(viewTagModel);
         }
 
         // GET: TagController/Details/5
@@ -41,6 +50,12 @@ namespace ShopOnline.Controllers
         {
             if (ModelState.IsValid)
             {
+                string userId = _userManager.GetUserId(User);
+                var user = await _userManager.FindByIdAsync(userId);
+                tag.UpdatedDate = DateTime.UtcNow;
+                tag.UpdatedBy = user.UserName;
+                tag.CreatedDate = DateTime.UtcNow;
+                tag.CreatedBy = user.UserName;
                 await _tagRepository.AddAsync(tag);
                 return RedirectToAction(nameof(Index));
             }
@@ -49,29 +64,46 @@ namespace ShopOnline.Controllers
         }
 
         // GET: TagController/Edit/5
-        public ActionResult Edit(string id)
+        public async Task<ActionResult> Edit(string id)
         {
-            return View();
+            var tag = await _tagRepository.GetByIdAsync(id);
+
+            return Json(tag);
         }
 
         // POST: TagController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(string id, Tag tag)
+        public async Task<ActionResult> Edit(Tag createOrUpdate)
         {
             try
             {
-                // TODO: Implement the logic to update the tag in the repository
+                if (ModelState.IsValid)
+                {
+                    string userId = _userManager.GetUserId(User);
+                    var user = await _userManager.FindByIdAsync(userId);
+                    var currentTag = await _tagRepository.GetByIdAsync(createOrUpdate.ID);
+                    if (currentTag != null)
+                    {
+                        currentTag.Name = createOrUpdate.Name;
+                        currentTag.Type = createOrUpdate.Type;
+                        currentTag.UpdatedDate = DateTime.UtcNow;
+                        currentTag.UpdatedBy = user.UserName;
+                        _tagRepository.SaveAsync();
+                    }
+                }
+                
                 return RedirectToAction(nameof(Index));
             }
-            catch
+            catch(Exception ex) 
             {
-                return View();
+                _logger.LogError(ex, "An error occurred while editing the tag."); // Log the error
+                return RedirectToAction(nameof(Index));
             }
         }
 
         // GET: TagController/Delete/5
-        public ActionResult Delete(string id)
+        public ActionResult DeleteGet(string id)
         {
             return View();
         }
@@ -79,16 +111,44 @@ namespace ShopOnline.Controllers
         // POST: TagController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> DeleteConfirmed(string id)
+        public async Task<ActionResult> Delete(string id)
         {
-            if (id == null)
+            try
             {
-                // If id is not provided, return a bad request response
-                return BadRequest();
-            }
+                if (id == null)
+                {
+                    // If id is not provided, return a bad request response
+                    return BadRequest();
+                }
 
-            await _tagRepository.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+                // Get the existing product from the repository
+                var tag = await _tagRepository.GetByIdAsync(id);
+
+                if (tag == null)
+                {
+                    // If the product doesn't exist, return not found
+                    return NotFound();
+                }
+
+                // Delete the product from the repository
+                await _tagRepository.DeleteAsync(tag.ID);
+
+                // Save changes to the repository
+                await _tagRepository.SaveAsync();
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                // Log the exception for troubleshooting
+                _logger.LogError(ex, "An error occurred while deleting the tag.");
+
+                // Optionally, add an error message to TempData or ViewBag to display on the view
+                TempData["ErrorMessage"] = "An error occurred while deleting the tag.";
+
+                return RedirectToAction(nameof(Index)); // Redirect to the index view even in case of error
+            }
         }
+    
     }
 }

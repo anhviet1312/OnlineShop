@@ -1,7 +1,9 @@
 ﻿
+using ShopOnline.Abstract;
+
 namespace ShopOnline.Models
 {
-    public class Tag
+    public class Tag : Auditable
     {
         
         public string ID { set; get; }

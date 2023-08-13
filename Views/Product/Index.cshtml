@@ -11,7 +11,7 @@
         text-overflow: ellipsis;
     }
 
-    .modal-dialog {
+    #editModal .modal-dialog {
         max-width: 1200px;
     }
 
@@ -86,6 +86,7 @@
                 @Html.DisplayNameFor(model => model.Products[0].UpdatedBy)
             </th>
             <th class="ellipsis"></th>
+            <th class="ellipsis"></th>
         </tr>
     </thead>
     <tbody>
@@ -148,8 +149,12 @@
             <td class="ellipsis">
                 @Html.DisplayFor(modelItem => item.UpdatedBy)
             </td>
-            <td >
-                    <button onclick="Edit(@item.ID)" class="btn btn-primary">Edit</button>
+            <td>
+                        <button onclick="Edit(@item.ID)" class="btn btn-primary">Edit</button>
+                                        
+            </td>
+            <td>
+                    <button onclick="Delete(@item.ID)" class="btn btn-primary">Delete</button>
             </td>
         </tr>
 }
@@ -160,7 +165,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Edit Product Category</h5>
+                <h5 class="modal-title" id="editModalLabel">Edit Product</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editForm" asp-action="Edit" method="post">
@@ -273,7 +278,27 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Delete Product Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deleteForm" asp-action="Delete" method="post">
+                <div class="modal-body">
+                    Are you sure to delete this product ?
 
+                  </div>  
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Confirm</button>
+                </div>
+                <input id="deleteId" type="hidden" name="id"/>
+            </form>
+        </div>
+    </div>
+</div>
 @section Scripts{
     <script>
         $(document).ready(function () {
@@ -318,6 +343,12 @@
                     console.log(error);
                 });
         }
+
+        var Delete = function (id){
+            $('#deleteModal').modal('show');
+            $('#deleteId').val(id);
+        }
+
     </script>
 
 }

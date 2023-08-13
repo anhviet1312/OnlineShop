@@ -13,19 +13,20 @@ using ShopOnline.Models.ViewModels;
 
 namespace ShopOnline.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ProductController : Controller
     {
         // GET: ProductController
         private readonly ApplicationDbContext _context;
         private readonly IProductRepository _productRepository;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<ProductController> _logger;
         private readonly IProductCategoryRepository _productCategoryRepository;
         private readonly ITagRepository _tagRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
 
         public ProductController(ApplicationDbContext context, IProductRepository productRepository, 
-                                             ILogger<HomeController> logger, IProductCategoryRepository productCategoryRepository,
+                                             ILogger<ProductController> logger, IProductCategoryRepository productCategoryRepository,
                                              ITagRepository tagRepository,
                                              IMapper mapper,
                                              UserManager<AppUser> userManager)
@@ -118,14 +119,14 @@ namespace ShopOnline.Controllers
             }
             return View(productDto);
         }
-
+        [Authorize(Roles = "Admin")]
         // GET: ProductController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
             var product = await _productRepository.GetProductByIdAsync(id);
             return Json(product);
         }
-
+        [Authorize(Roles = "Admin")]
         // POST: ProductController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -136,7 +137,7 @@ namespace ShopOnline.Controllers
                 if (ModelState.IsValid)
                 {
                     // Get the existing product from the repository
-                    var existingProduct = await _productRepository.GetProductByIdAsync(productid);
+                    var existingProduct = await _productRepository.GetProductByIdWithListTagsAsync(productid);
 
                     if (existingProduct == null)
                     {
@@ -194,7 +195,7 @@ namespace ShopOnline.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
+        [Authorize(Roles = "Admin")]
         // GET: ProductController/Delete/5
         public ActionResult Delete(int id)
         {
@@ -204,16 +205,44 @@ namespace ShopOnline.Controllers
         // POST: ProductController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<ActionResult> Delete(int? id)
         {
             try
             {
+                if (id == null)
+                {
+                    // If id is not provided, return a bad request response
+                    return BadRequest();
+                }
+
+                // Get the existing product from the repository
+                var existingProduct = await _productRepository.GetProductByIdAsync(id.Value);
+
+                if (existingProduct == null)
+                {
+                    // If the product doesn't exist, return not found
+                    return NotFound();
+                }
+
+                // Delete the product from the repository
+                await _productRepository.DeleteAsync(existingProduct.ID);
+
+                // Save changes to the repository
+                await _productRepository.SaveAsync();
+
                 return RedirectToAction(nameof(Index));
             }
-            catch
+            catch (Exception ex)
             {
-                return View();
+                // Log the exception for troubleshooting
+                _logger.LogError(ex, "An error occurred while deleting the product.");
+
+                // Optionally, add an error message to TempData or ViewBag to display on the view
+                TempData["ErrorMessage"] = "An error occurred while deleting the product.";
+
+                return RedirectToAction(nameof(Index)); // Redirect to the index view even in case of error
             }
         }
+
     }
 }

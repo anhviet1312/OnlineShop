@@ -24,7 +24,7 @@ namespace ShopOnline.Data.Configurations
             entity.HasOne(e => e.Tag)
                 .WithMany()
                 .HasForeignKey(e => e.TagID)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

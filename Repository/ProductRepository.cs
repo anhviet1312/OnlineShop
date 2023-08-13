@@ -57,7 +57,10 @@ namespace ShopOnline.Repository
         {
             return await _context.Products.FindAsync(id);
         }
-
+        public async Task<Product> GetProductByIdWithListTagsAsync(int id)
+        {
+            return await _context.Products.Include(p => p.ProductTags).FirstOrDefaultAsync(p=> p.ID == id);
+        }
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();

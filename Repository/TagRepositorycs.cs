@@ -44,7 +44,7 @@ namespace ShopOnline.Repository
 
         public async Task<Tag> GetByIdAsync(string id)
         {
-            return await _context.Tags.FindAsync(id);
+            return await _context.Tags.Where(t=> t.ID == id).FirstOrDefaultAsync();
         }
 
         public async Task SaveAsync()
