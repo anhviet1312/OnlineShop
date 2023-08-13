@@ -5,4 +5,31 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+</div>
+<div>
+    @*<form asp-action="Privacy" method="post">
+        <input type="text" class="form-control" name="Name"/>
+        <input type="text" class="form-control" name="Mark"/>
+        
+        <button class="btn btn-primary" type="submit">Submit</button>
+    </form>*@
+
+
+    <form asp-action="Test" method="post">
+        <div class="form-group">
+            <label class="form-label">Id</label>
+            <input type="text" class="form-control" name="Id" />
+        </div>
+           <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" name="Name" />
+        </div>
+        
+           <div class="form-group">
+            <label class="form-label">Type</label>
+            <input type="text" class="form-control" name="Type" />
+        </div>
+        <button class="btn btn-primary" type="submit">Submit</button>
+    </form>
 </div>
