@@ -4,7 +4,11 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using ShopOnline.Areas.Identity.AuthorizationHandler;
 using ShopOnline.Data;
+using ShopOnline.Interface;
 using ShopOnline.Models;
+using ShopOnline.Repository;
+using AutoMapper;
+using ShopOnline.Helper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,9 +73,12 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddTransient<IEmailSender, SendMailService>();
 builder.Services.AddTransient<IAuthorizationHandler, AppAuthorizationHandler>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
