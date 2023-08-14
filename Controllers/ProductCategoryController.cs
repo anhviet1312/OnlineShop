@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ShopOnline.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using ShopOnline.Repository;
 
 namespace ShopOnline.Controllers
 {
@@ -17,6 +18,7 @@ namespace ShopOnline.Controllers
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
         private readonly ILogger<ProductCategoryController> _logger;
+        private const int PRODUCT_CATEGORY_PER_PAGE = 1;
 
         public ProductCategoryController(IProductCategoryRepository productCategoryRepository, IMapper mapper, 
                                          UserManager<AppUser> userManager,
@@ -29,10 +31,17 @@ namespace ShopOnline.Controllers
         }
 
         // GET: ProductCategoryController
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(int ? pageNumber)
         {
             var viewProductCategory = new ViewProductCategoryModel();
-            viewProductCategory.ProductCategories = (List<ProductCategory>) await _productCategoryRepository.GetAllAsync();
+            var productCategories = (List<ProductCategory>)await _productCategoryRepository.GetAllAsync();
+            var totalPage = productCategories.Count > 0 ? (productCategories.Count - 1) / PRODUCT_CATEGORY_PER_PAGE + 1 : 0;
+            int pageNumberValue = pageNumber ?? 1;
+            var productCategoriesInPage = productCategories.Skip((pageNumberValue - 1) * PRODUCT_CATEGORY_PER_PAGE)
+                               .Take(PRODUCT_CATEGORY_PER_PAGE).ToList();
+            viewProductCategory.ProductCategories = productCategoriesInPage;
+            viewProductCategory.TotalPages = totalPage;
+            viewProductCategory.PageNumber = pageNumberValue;
             return View(viewProductCategory);
         }
 

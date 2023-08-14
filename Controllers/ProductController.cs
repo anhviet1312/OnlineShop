@@ -10,6 +10,7 @@ using ShopOnline.Models.CreateModels;
 using ShopOnline.Repository;
 using Microsoft.AspNetCore.Identity;
 using ShopOnline.Models.ViewModels;
+using System.Drawing.Printing;
 
 namespace ShopOnline.Controllers
 {
@@ -24,6 +25,7 @@ namespace ShopOnline.Controllers
         private readonly ITagRepository _tagRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
+        private const int PRODUCT_PER_PAGE = 1;
 
         public ProductController(ApplicationDbContext context, IProductRepository productRepository, 
                                              ILogger<ProductController> logger, IProductCategoryRepository productCategoryRepository,
@@ -39,12 +41,21 @@ namespace ShopOnline.Controllers
             _mapper = mapper;
             _userManager = userManager;
         }
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(int ? pageNumber)
         {
             var productViewModel = new ViewProductModel();
             var categories = await _productCategoryRepository.GetAllAsync();
             var tags = await _tagRepository.GetAllAsync();
-            productViewModel.Products = await _productRepository.GetAllAsync();
+            var products = await _productRepository.GetAllAsync();
+            var totalPage = products.Count > 0 ? (products.Count - 1)/PRODUCT_PER_PAGE + 1 : 0;
+            int pageNumberValue = pageNumber ?? 1;
+            var productsInPage = products
+        .Skip((pageNumberValue - 1) * PRODUCT_PER_PAGE)
+        .Take(PRODUCT_PER_PAGE)
+        .ToList();
+            productViewModel.Products = productsInPage;
+            productViewModel.TotalPages = totalPage;
+            productViewModel.PageNumber = pageNumberValue;
             productViewModel.CreateOrUpdate = new CreateProductDto
             {
                 ListCategories = (List<ProductCategory>)categories,

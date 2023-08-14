@@ -21,13 +21,12 @@ namespace ShopOnline.Areas.Admin.Pages.Role
         }
         public class UserInList : AppUser
         {
-            // Liệt kê các Role của User ví dụ: "Admin,Editor" ...
             public string ListRoles { set; get; }
         }
         public List<UserInList> users;
         public int TotalPages { set; get; }
 
-        [TempData] // Sử dụng Session
+        [TempData] // Session
         public string StatusMessage { get; set; }
 
         [BindProperty(SupportsGet = true)]
@@ -56,7 +55,7 @@ namespace ShopOnline.Areas.Admin.Pages.Role
             //{
             //    var roles = await _userManager.GetRolesAsync(u);
             //    u.ListRoles = string.Join(",", roles.ToList());
-            //});
+            //});            =======> this code can make error, so use the code below instead
             foreach (var u in users)
             {
                 var roles = await _userManager.GetRolesAsync(u);
