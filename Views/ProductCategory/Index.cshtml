@@ -18,6 +18,10 @@
         width: 300px;
         margin-left: 50px;
     }
+
+    .productCategory-paging .pagination {
+        justify-content: end;
+    }
     
 </style> 
 <h1>Index</h1>
@@ -248,3 +252,21 @@
     </script>
     
 }
+
+@{
+
+    Func<int?, string> generateUrl = (int? _pagenumber) =>
+    {
+        return Url.Action("Index", "ProductCategory", new { pageNumber = _pagenumber });
+    };
+
+    var datapaging = new
+    {
+        currentPage = Model.PageNumber,
+        countPages = Model.TotalPages,
+        generateUrl = generateUrl
+    };
+}
+<div class="productCategory-paging">
+    <partial name="_Paging" model="@datapaging" />
+</div>

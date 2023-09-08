@@ -45,6 +45,7 @@ namespace ShopOnline.Controllers
             return View(viewProductCategory);
         }
 
+
         // GET: ProductCategoryController/Create
         public ActionResult Create()
         {

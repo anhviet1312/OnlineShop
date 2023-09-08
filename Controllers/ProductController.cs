@@ -25,7 +25,7 @@ namespace ShopOnline.Controllers
         private readonly ITagRepository _tagRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
-        private const int PRODUCT_PER_PAGE = 1;
+        private const int PRODUCT_PER_PAGE = 3;
 
         public ProductController(ApplicationDbContext context, IProductRepository productRepository, 
                                              ILogger<ProductController> logger, IProductCategoryRepository productCategoryRepository,
@@ -41,7 +41,7 @@ namespace ShopOnline.Controllers
             _mapper = mapper;
             _userManager = userManager;
         }
-        public async Task<ActionResult> Index(int ? pageNumber)
+        public async Task<ActionResult> Index(int? pageNumber)
         {
             var productViewModel = new ViewProductModel();
             var categories = await _productCategoryRepository.GetAllAsync();
@@ -64,13 +64,48 @@ namespace ShopOnline.Controllers
             return View(productViewModel);
         }
 
+        [AllowAnonymous]
+        public async Task<ActionResult> CustomerView(int? pageNumber, int ?categoryId,  string? searchKey, string? orderBy, 
+                     decimal? minPrice = 0, decimal? maxPrice = 2000)
+        {
+            var productViewModel = new ViewCustomerProductModel();
+            
+            var products = await _productRepository.GetAllAsync();
+            if(categoryId != null) products = products.Where(p => p.CategoryID == categoryId.Value).ToList();
+            if (!String.IsNullOrEmpty(searchKey))
+            {
+                searchKey = searchKey.ToLower();
+                products = products.Where(p => p.Name.ToLower().Contains(searchKey) || p.Description.ToLower().Contains(searchKey)).ToList();
+            }
+            products = products.Where(p => p.Price >= minPrice && p.Price <= maxPrice).ToList();
+            if (!String.IsNullOrEmpty(orderBy))
+            {
+                if (orderBy.ToLower().Equals("asc")) products = products.OrderBy(p => p.Price).ToList();
+                else products = products.OrderByDescending(p => p.Price).ToList();
+            }
+            var totalPage = products.Count > 0 ? (products.Count - 1) / PRODUCT_PER_PAGE + 1 : 0;
+            int pageNumberValue = pageNumber ?? 1;
+            var productsInPage = products.Skip((pageNumberValue - 1) * PRODUCT_PER_PAGE)
+                                         .Take(PRODUCT_PER_PAGE)
+                                         .ToList();
+            productViewModel.Products = productsInPage;
+            productViewModel.TotalPages = totalPage;
+            productViewModel.PageNumber = pageNumberValue;
+            productViewModel.SearchKey = searchKey;
+            productViewModel.CategoryId = categoryId;
+            productViewModel.MinPrice = minPrice;
+            productViewModel.MaxPrice = maxPrice;
+            productViewModel.OrderBy = orderBy;
+            return View(productViewModel);
+        }
+
         // GET: ProductController/Details/5
         public ActionResult Details(int id)
         {
             return View();
         }
 
-        [Authorize(Roles = "Admin")]
+        
         // GET: ProductController/Create
         public async Task<ActionResult> Create()
         {
@@ -86,7 +121,7 @@ namespace ShopOnline.Controllers
         }
 
         // POST: ProductController/Create
-        [Authorize(Roles = "Admin")]
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(CreateProductDto productDto)
@@ -130,14 +165,14 @@ namespace ShopOnline.Controllers
             }
             return View(productDto);
         }
-        [Authorize(Roles = "Admin")]
+        
         // GET: ProductController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
             var product = await _productRepository.GetProductByIdAsync(id);
             return Json(product);
         }
-        [Authorize(Roles = "Admin")]
+        
         // POST: ProductController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -206,7 +241,7 @@ namespace ShopOnline.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [Authorize(Roles = "Admin")]
+       
         // GET: ProductController/Delete/5
         public ActionResult Delete(int id)
         {
