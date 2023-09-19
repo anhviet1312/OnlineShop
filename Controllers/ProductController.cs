@@ -120,8 +120,15 @@ namespace ShopOnline.Controllers
             return View(viewModel);
         }
 
-        // POST: ProductController/Create
-        
+        [AllowAnonymous]
+        public async Task<ActionResult> ProductDetailView(int id)
+        {
+            var product = await _productRepository.GetProductByIdAsync(id);
+            var productDto = _mapper.Map<ViewProductDetailModel>(product);
+            return View(productDto);
+        }
+            // POST: ProductController/Create
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(CreateProductDto productDto)

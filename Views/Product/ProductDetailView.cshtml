@@ -1,0 +1,208 @@
+﻿@model ShopOnline.Models.ViewModels.ViewProductDetailModel
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles
+{
+    @*<link rel="stylesheet" href="~/css/font-awesome.min.css" type="text/css">*@
+    <link rel="stylesheet" href="~/css/elegant-icons.css" type="text/css">
+    <link rel="stylesheet" href="~/css/jquery-ui.min.css" type="text/css">
+    
+    <script src="https://kit.fontawesome.com/d212847f69.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;900&display=swap" rel="stylesheet">
+}
+
+<style>
+    .container_productDetail {
+        max-width: 1170px;
+        margin: 0 auto;
+        /*height: 100px;*/
+       /* background-color: blue;*/
+    }
+    .productDetail_image img{
+        object-fit: cover;
+        width: 100%;
+        height: auto;
+    }
+
+    .productDetail_description_text p{
+        font-weight: 500;
+        line-height: 1.5rem;
+        font-size: 1.25rem;
+        overflow-wrap: break-word;
+    }
+
+    .productDetail_description_vote{
+        display: flex;
+    }
+
+    .productDetail_viewCount{
+        background-color: initial;
+        align-items: center;
+        width: 65px;
+        border-right: 1px solid lightpink;
+    }
+    .productDetail_viewCount span{
+
+            font-size: 1rem;
+            color: #222;
+            margin-left: 5px;
+            padding-bottom: 2px;
+    }
+
+    .productDetail_comment{
+        border-right: 1px solid lightpink;
+        align-items: center;
+        width: 85px;
+        padding-left: 15px;
+
+    }
+
+    .productDetail_sold{
+        align-items: center;
+        width: 110px;
+        padding-left: 15px;
+    }
+
+    .productDetail_description_price{
+        font-size: 1.875rem;
+        font-weight: 500;
+        color: red;
+        margin: 15px 0;
+    }
+
+    .productDetail_description_quantity_input {
+
+    }
+    .productDetail_description_quantity h3{
+        font-size: inherit;
+        width: 110px;
+            color: #757575;
+            text-transform: capitalize;
+            flex-shrink: 0;
+            font-weight: 400;
+            margin: 0;
+    }
+    .productDetail_description_quantity_input button{
+        outline: none;
+        font-size: 0.875rem;
+        font-weight: 300;
+        line-height: 1;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,0,0,.09);
+        border-radius: 2px;
+        background: transparent;
+        color: rgba(0,0,0,.8);
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+    }
+    .productDetail_description_quantity_input input{
+        width: 60px;
+        height: 32px;
+        font-size: 16px;
+        cursor: text;
+        font-weight: 400;
+        text-align: center;
+        border: 1px solid rgba(0,0,0,.09);
+        border-radius: 2px;
+        background: transparent;
+        color: rgba(0,0,0,.8);
+    }
+
+    .productDetail_description_buy {
+        margin-top: 15px;
+    }
+
+    .productDetail_description_buy_addToCart{
+        color: red;
+        border: 1px solid red;
+        box-shadow: 0 1px 1px 0 rgba(0,0,0,.03);
+        min-width: 220px;
+        height: 42px;
+        text-align: center;
+        
+
+    }
+</style>
+
+<form asp-action="" asp-controller="">
+    <section class="product-detail">
+        <div class="container_productDetail row">
+            <h3>@Model.Name</h3>
+            <section class="productDetail_image col-md-4">
+                <img src="@Model.Image"/>
+                
+            </section>
+            <section class="productDetail_description col-md-8">
+                <div class="productDetail_description_text">
+                    <p>@Model.Description</p>
+                </div>
+                <div class="productDetail_description_vote">
+                    <div class="productDetail_viewCount">
+                       <i class="fa-regular fa-eye"></i>
+                       <span>@Model.ViewCount</span>
+                    </div>
+                    <div class="productDetail_comment">
+                        <i class="fa-regular fa-comment"></i>
+                       <span>1000</span>
+                    </div>
+                    
+                    <div class="productDetail_sold">
+
+                        <p style="margin-bottom: 0;"><span>1000</span> sold</p>
+                    </div>
+                </div>
+                <div style="background-color: lightpink; height: 1px; margin-top: 2px"></div>
+                <div class="productDetail_description_price">
+                    $@Model.Price
+                </div>
+
+                <div class="productDetail_description_infor">
+                    <div class="productDetail_description_quantity d-flex align-items-center">
+                        <h3>Quantity</h3>
+                        <div class="productDetail_description_quantity_input d-flex">
+                            <button>
+                                <svg style="font-size: 10px;width: 10px;height: 10px;flex-shrink: 0;" enable-background="new 0 0 10 10" viewBox="0 0 10 10" x="0" y="0">
+                                    <polygon points="4.5 4.5 3.5 4.5 0 4.5 0 5.5 3.5 5.5 4.5 5.5 10 5.5 10 4.5"></polygon></svg>
+                            </button>
+                            <input type="number" class="d-flex" asp-for="@Model.ChoosenQuantity" max="@Model.Quantity" min="1"/>
+                            <button>
+                                <svg style="font-size: 10px;width: 10px;height: 10px;flex-shrink: 0;" enable-background="new 0 0 10 10" viewBox="0 0 10 10" x="0" y="0">
+                                    <polygon points="10 4.5 5.5 4.5 5.5 0 4.5 0 4.5 4.5 0 4.5 0 5.5 4.5 5.5 4.5 10 5.5 10 5.5 5.5 10 5.5"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                        <div style="color: #757575; margin-left: 15px">
+                            @Model.Quantity Products Remain
+                        </div>
+                    </div>
+                    <div class="productDetail_description_buy">
+                        <button class="productDetail_description_buy_addToCart">
+                            <i class="fa-solid fa-cart-plus" style="margin-right: 5px"></i>
+                            Add To Cart
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+</form>
+
+@section Scripts{
+    <script>
+        
+
+
+    </script>
+    <script src="~/lib/jquery/dist/jquery-3.3.1.min.js"></script>
+    
+}
+
+
+
+
