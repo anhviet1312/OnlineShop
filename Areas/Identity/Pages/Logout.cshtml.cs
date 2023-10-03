@@ -28,8 +28,8 @@ namespace ShopOnline.Areas.Identity.Pages
             return ViewComponent(MessagePage.COMPONENTNAME,
                 new MessagePage.Message()
                 {
-                    title = "Đã đăng xuất",
-                    htmlcontent = "Đăng xuất thành công",
+                    title = "Logged out",
+                    htmlcontent = "Logout suscessfully",
                     urlredirect = returnUrl ?? Url.Page("/Index"),
                     secondwait = 1
                 }

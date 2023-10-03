@@ -73,6 +73,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddSignalR();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddTransient<IEmailSender, SendMailService>();
 builder.Services.AddTransient<IAuthorizationHandler, AppAuthorizationHandler>();

@@ -218,8 +218,9 @@
                     {
                        <div class="col-lg-4 col-md-6 col-sm-6">
                             <div class="product__item">
-                            <div class="product__item__pic set-bg" 
-                             data-setbg="@item.Image">
+                            <div class="product__item__pic set-bg"
+                                     data-setbg="/uploads/@item.Image">
+                                        
                                     <ul class="product__item__pic__hover">
                                         <li><a href="#"><i class="fa fa-heart"></i></a></li>
                                             <li><a asp-action="ProductDetailView" asp-route-id="@item.ID"><i class="fa fa-retweet"></i></a></li>
@@ -244,19 +245,24 @@
                                                 decimal? _minPrice, decimal ? _maxPrice, string ? _searchKey, string? _order) =>
     {
         return Url.Action("CustomerView", "Product", new { pageNumber = _pagenumber , categoryId = _categoryId, minPrice = _minPrice,maxPrice = _maxPrice,
-                                             searchKey = _searchKey.Trim(), orderBy = _order });
+                                             searchKey = _searchKey?.Trim(), orderBy = _order });
     };
 
     var datapaging = new
     {
         currentPage = Model.PageNumber,
         countPages = Model.TotalPages,
+        categoryId = Model.CategoryId,
+        minPrice = Model.MinPrice,
+        maxPrice = Model.MaxPrice,
+        searchKey = Model.SearchKey,
+        orderBy = Model.OrderBy,
         generateUrl = generateUrl
     };
 }
 
                 <div class="product-paging">
-                    <partial name="_Paging" model="@datapaging" />
+                    <partial name="_PagingCustomerView" model="@datapaging" />
                 </div>
                 </div>
                 

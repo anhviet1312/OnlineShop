@@ -25,13 +25,15 @@ namespace ShopOnline.Controllers
         private readonly ITagRepository _tagRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IWebHostEnvironment _environment;
         private const int PRODUCT_PER_PAGE = 3;
 
         public ProductController(ApplicationDbContext context, IProductRepository productRepository, 
                                              ILogger<ProductController> logger, IProductCategoryRepository productCategoryRepository,
                                              ITagRepository tagRepository,
                                              IMapper mapper,
-                                             UserManager<AppUser> userManager)
+                                             UserManager<AppUser> userManager,
+                                             IWebHostEnvironment environment)
         {
             _context = context;
             _productRepository = productRepository;
@@ -40,6 +42,7 @@ namespace ShopOnline.Controllers
             _tagRepository = tagRepository;
             _mapper = mapper;
             _userManager = userManager;
+            _environment = environment;
         }
         public async Task<ActionResult> Index(int? pageNumber)
         {
@@ -120,46 +123,57 @@ namespace ShopOnline.Controllers
             return View(viewModel);
         }
 
-        [AllowAnonymous]
-        public async Task<ActionResult> ProductDetailView(int id)
-        {
-            var product = await _productRepository.GetProductByIdAsync(id);
-            var productDto = _mapper.Map<ViewProductDetailModel>(product);
-            return View(productDto);
-        }
-            // POST: ProductController/Create
+
+        // POST: ProductController/Create
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(CreateProductDto productDto)
         {
+            string fileImage = "";
             try
             {
                 if (ModelState.IsValid)
                 {
-                    var product = _mapper.Map<Product>(productDto);
-                    string userId = _userManager.GetUserId(User);
-                    var user = await _userManager.FindByIdAsync(userId);
-                    product.CreatedDate = DateTime.UtcNow;
-                    product.CreatedBy = user.UserName;
-                    product.UpdatedDate = DateTime.UtcNow;
-                    product.UpdatedBy = user.UserName;
-                    if (productDto.ListSelectedTags != null)
-                    {
-                        foreach (var tagId in productDto.ListSelectedTags)
-                        {
-                            var productTag = new ProductTag
-                            {
-                                ProductID = product.ID,
-                                TagID = tagId
-                            };
-                            product.ProductTags.Add(productTag);
-                        }
-                    }
-                    await _productRepository.AddAsync(product);
-                    await _productRepository.SaveAsync();
+                    var user = await _userManager.GetUserAsync(User);
 
-                    return RedirectToAction(nameof(Index));
+                    if (user != null)
+                    {
+                        string fileExtension = Path.GetExtension(productDto.ImageUpload.FileName);
+                        string fileName = $"{user.Id}_{DateTime.Now.Ticks}_{productDto.ImageUpload.FileName}";
+                        fileImage = fileName;
+                        string filePath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await productDto.ImageUpload.CopyToAsync(fileStream);
+                        }
+
+                        var product = _mapper.Map<Product>(productDto);
+                        product.CreatedDate = DateTime.UtcNow;
+                        product.CreatedBy = user.UserName;
+                        product.UpdatedDate = DateTime.UtcNow;
+                        product.UpdatedBy = user.UserName;
+                        product.Image = fileName;
+
+                        if (productDto.ListSelectedTags != null)
+                        {
+                            foreach (var tagId in productDto.ListSelectedTags)
+                            {
+                                var productTag = new ProductTag
+                                {
+                                    ProductID = product.ID,
+                                    TagID = tagId
+                                };
+                                product.ProductTags.Add(productTag);
+                            }
+                        }
+
+                        await _productRepository.AddAsync(product);
+                        await _productRepository.SaveAsync();
+
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
             }
             catch (Exception ex)
@@ -169,10 +183,34 @@ namespace ShopOnline.Controllers
 
                 // Add an error message to ModelState
                 ModelState.AddModelError(string.Empty, "An error occurred while creating the product.");
+
+                // Delete the file if it exists
+                if (!string.IsNullOrEmpty(fileImage))
+                {
+                    string filePath = Path.Combine(_environment.WebRootPath, "uploads", fileImage);
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }            
             }
+
+            var categories = await _productCategoryRepository.GetAllAsync();
+            var tags = await _tagRepository.GetAllAsync();
+            productDto.ListCategories = (List<ProductCategory>)categories;
+            productDto.ListTags = (List<Tag>)tags;
+
             return View(productDto);
         }
-        
+
+
+        [AllowAnonymous]
+        public async Task<ActionResult> ProductDetailView(int id)
+        {
+            var product = await _productRepository.GetProductByIdAsync(id);
+            var productDto = _mapper.Map<ViewProductDetailModel>(product);
+            return View(productDto);
+        }
         // GET: ProductController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
@@ -185,6 +223,7 @@ namespace ShopOnline.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(int productid, CreateProductDto createOrUpdate)
         {
+            string fileImage = "";
             try
             {
                 if (ModelState.IsValid)
@@ -199,14 +238,23 @@ namespace ShopOnline.Controllers
                     }
 
                     // Map the updated data from the createOrUpdate to the existing product
-                    _mapper.Map(createOrUpdate, existingProduct);
-
-                    // Set the UpdatedDate and UpdatedBy fields
                     string userId = _userManager.GetUserId(User);
                     var user = await _userManager.FindByIdAsync(userId);
+                    
+                    string fileExtension = Path.GetExtension(createOrUpdate.ImageUpload.FileName);
+                    string fileName = $"{user.Id}_{DateTime.Now.Ticks}_{createOrUpdate.ImageUpload.FileName}";
+                    fileImage = fileName;
+                    string filePath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await createOrUpdate.ImageUpload.CopyToAsync(fileStream);
+                    }
+                    // Set the UpdatedDate and UpdatedBy fields
+                    _mapper.Map(createOrUpdate, existingProduct);
                     existingProduct.UpdatedDate = DateTime.UtcNow;
                     existingProduct.UpdatedBy = user.UserName;
-
+                    existingProduct.Image = fileName;
                     // Clear existing product tags and update with the new ones
                     existingProduct.ProductTags.Clear();
                     if (createOrUpdate.ListSelectedTags != null)
@@ -222,10 +270,10 @@ namespace ShopOnline.Controllers
                         }
                     }
 
-                    // Update the product in the repository
+                    
                     await _productRepository.UpdateAsync(existingProduct);
 
-                    // Save changes to the repository
+                    
                     await _productRepository.SaveAsync();
 
                     return RedirectToAction(nameof(Index));

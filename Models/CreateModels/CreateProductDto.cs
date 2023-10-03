@@ -2,6 +2,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json.Serialization;
+using System.Runtime.CompilerServices;
+using ShopOnline.Helper.Validate;
 
 namespace ShopOnline.Models.CreateModels
 {
@@ -18,8 +20,12 @@ namespace ShopOnline.Models.CreateModels
         [Required]
         public int CategoryID { get; set; }
 
-        [MaxLength(256)]
-        public string? Image { get; set; }
+        [Required(ErrorMessage="Choose 1 file image")]
+        [DataType(DataType.Upload)]
+        [CheckFileExtensions(Extensions = "png,jpg,jpeg")]
+        [Display(Name="Image")]
+        
+        public IFormFile ImageUpload { get; set; }
 
         [Column(TypeName = "xml")]
         public string? MoreImages { get; set; }

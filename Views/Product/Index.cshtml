@@ -173,7 +173,7 @@
                 <h5 class="modal-title" id="editModalLabel">Edit Product</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editForm" asp-action="Edit" method="post">
+            <form id="editForm" asp-action="Edit" method="post" enctype="multipart/form-data">
                 <div class="modal-body">
 
                     <div asp-validation-summary="All" class="text-danger"></div>
@@ -198,9 +198,9 @@
 
                     <div class="d-flex w-100">
                         <div class="form-group form-input">
-                            <label asp-for="CreateOrUpdate.Image" class="control-label"></label>
-                            <input id="update_Image" asp-for="CreateOrUpdate.Image" class="form-control" />
-                            <span asp-validation-for="CreateOrUpdate.Image" class="text-danger"></span>
+                            <label asp-for="CreateOrUpdate.ImageUpload" class="control-label"></label>
+                            <input id="update_Image" asp-for="CreateOrUpdate.ImageUpload" class="form-control" />
+                            <span asp-validation-for="CreateOrUpdate.ImageUpload" class="text-danger"></span>
                         </div>
                         <div class="form-group form-input">
                             <label asp-for="CreateOrUpdate.MoreImages" class="control-label"></label>
@@ -323,7 +323,7 @@
                     $('#update_Alias').val(response.alias);
                     $('#update_CategoryID').val(response.categoryID);
 
-                    $('#update_Image').val(response.image);
+                   // $('#update_Image').val(response.image);
                     $('#update_MoreImages').val(response.moreImages);
                     $('#update_Price').val(response.price);
 
