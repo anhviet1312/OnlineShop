@@ -55,6 +55,14 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Identity/AccessDenied";
     options.LoginPath = "/Identity/Login";
 });
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromSeconds(3600);
+   // options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("StaffPolicy", policy =>
@@ -73,12 +81,14 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddSignalR();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddTransient<IEmailSender, SendMailService>();
 builder.Services.AddTransient<IAuthorizationHandler, AppAuthorizationHandler>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
 builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -104,6 +114,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.UseSession();
 app.MapRazorPages();
 
 app.Run();

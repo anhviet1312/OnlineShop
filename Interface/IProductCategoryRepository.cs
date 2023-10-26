@@ -19,7 +19,7 @@ namespace ShopOnline.Interface
         Task<IEnumerable<ProductCategory>> GetAllByParentIdAsync(int parentId);
 
         Task<ProductCategory> GetByIdAsync(int id);
-
+        ProductCategory GetById(int id);
         Task SaveAsync();
     }
 }

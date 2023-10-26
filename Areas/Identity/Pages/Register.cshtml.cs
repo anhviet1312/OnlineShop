@@ -51,20 +51,20 @@ namespace ShopOnline.Areas.Identity.Pages
 			public string Email { get; set; }
 
 			[Required]
-			[StringLength(100, ErrorMessage = "{0} dài từ {2} đến {1} ký tự.", MinimumLength = 3)]
+			[StringLength(100, ErrorMessage = "{0} has length in range [{2};{1}].", MinimumLength = 3)]
 			[DataType(DataType.Password)]
 			[Display(Name = "Password")]
 			public string Password { get; set; }
 
 			[DataType(DataType.Password)]
 			[Display(Name = "Confirm password")]
-			[Compare("Password", ErrorMessage = "Mật khẩu không giống nhau")]
+			[Compare("Password", ErrorMessage = "Confirm password not match")]
 			public string ConfirmPassword { get; set; }
 
 			[Required]
-			[StringLength(100, ErrorMessage = "{0} dài từ {2} đến {1} ký tự.", MinimumLength = 3)]
+			[StringLength(100, ErrorMessage = "{0} has length in range [{2};{1}].", MinimumLength = 3)]
 			[DataType(DataType.Text)]
-			[Display(Name = "Tên tài khoản (viết liền - không dấu)")]
+			[Display(Name = "Username")]
 			public string UserName { set; get; }
 		}
 
@@ -111,8 +111,8 @@ namespace ShopOnline.Areas.Identity.Pages
 						protocol: Request.Scheme);
 
 					// Gửi email    
-					await _emailSender.SendEmailAsync(Input.Email, "Xác nhận địa chỉ email",
-						$"Hãy xác nhận địa chỉ email bằng cách <a href='{callbackUrl}'>Bấm vào đây</a>.");
+					await _emailSender.SendEmailAsync(Input.Email, "Confirma account's email",
+						$"Confirm your email by clicking <a href='{callbackUrl}'>Click here</a>.");
 
 					if (_userManager.Options.SignIn.RequireConfirmedEmail)
 					{

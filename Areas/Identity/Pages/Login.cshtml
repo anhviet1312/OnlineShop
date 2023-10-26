@@ -1,7 +1,7 @@
 ﻿@page
 @model ShopOnline.Areas.Identity.Pages.LoginModel
 @{
-    ViewData["Title"] = "ĐĂNG NHẬP";
+    ViewData["Title"] = "Login";
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -9,7 +9,6 @@
     <div class="col-md-4">
         <section>
             <form id="account" method="post">
-                <h4>Điền thông tin để đăng nhập.</h4>
                 <hr />
                 <div asp-validation-summary="All" class="text-danger"></div>
                 <div class="form-group">
@@ -46,14 +45,15 @@
     </div>
     <div class="col-md-6 col-md-offset-2">
         <section>
-            <h4>Đăng nhập bằng.</h4>
+            <h4>Login using external services.</h4>
             <hr />
             @{
                 if ((Model.ExternalLogins?.Count ?? 0) == 0)
                 {
                     <div>
                         <p>
-                            Chưa cấu hình đăng nhập bằng dịch vụ khác. See <a href="https://go.microsoft.com/fwlink/?LinkID=532715">this article</a>
+                            Has not configured for login use external service
+                            <a href="https://go.microsoft.com/fwlink/?LinkID=532715">this article</a>
                         </p>
                     </div>
                 }

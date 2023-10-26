@@ -16,7 +16,7 @@ namespace ShopOnline.Controllers
         private readonly ITagRepository _tagRepository;
         private readonly ILogger<TagController> _logger;
         private readonly UserManager<AppUser> _userManager;
-
+        private const int TAG_PER_PAGE = 1;
         public TagController(ITagRepository tagRepository, ILogger<TagController> logger, UserManager<AppUser> userManager)
         {
             _tagRepository = tagRepository;
@@ -25,11 +25,17 @@ namespace ShopOnline.Controllers
         }
 
         // GET: TagController
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(int ?pageNumber)
         {
             var viewTagModel = new ViewTagModel();
-
-            viewTagModel.Tags = (List<Tag>) await _tagRepository.GetAllAsync();
+            var tags =(List<Tag>)await _tagRepository.GetAllAsync();           
+            var totalPage = tags.Count > 0 ? (tags.Count - 1) / TAG_PER_PAGE + 1 : 0;
+            int pageNumberValue = pageNumber ?? 1;
+            var tagsInPage = tags.Skip((pageNumberValue - 1) * TAG_PER_PAGE)
+                               .Take(TAG_PER_PAGE).ToList();
+            viewTagModel.Tags = tagsInPage;
+            viewTagModel.TotalPages = totalPage;
+            viewTagModel.PageNumber = pageNumberValue;
             return View(viewTagModel);
         }
 

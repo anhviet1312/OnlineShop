@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ShopOnline.Models;
 using ShopOnline.Models.CreateModels;
+using ShopOnline.Models.ViewModels;
 
 namespace ShopOnline.Helper
 {
@@ -9,6 +10,7 @@ namespace ShopOnline.Helper
         public MappingProfile() {
             CreateMap<CreateProductCategoryDto, ProductCategory>();
             CreateMap<CreateProductDto, Product>();
+            CreateMap<Product, ViewProductDetailModel>();
         }
     }
 }
