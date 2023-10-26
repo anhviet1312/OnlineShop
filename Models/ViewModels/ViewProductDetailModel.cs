@@ -2,6 +2,7 @@
 {
     public class ViewProductDetailModel
     {
+        public int ID { get; set; } 
         public string Name { set; get; }
 
         public string Alias { set; get; }

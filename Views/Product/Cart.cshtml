@@ -1,0 +1,167 @@
+﻿@model ShopOnline.Models.Cart
+
+@{
+    ViewData["Title"] = "Cart";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/product/cart/cart_style.css" type="text/css">
+     <script src="https://kit.fontawesome.com/d212847f69.js" crossorigin="anonymous"></script>
+}
+@{
+    var totalAmount = 0M;
+}
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-8 cart">
+            <div class="title">
+                <div class="row">
+                    <div class="col"><h4><b>Shopping Cart</b></h4></div>
+                    <div id="countItem" class="col align-self-center text-right text-muted">
+                        @(Model.ListItems.Count == 0 ? "No item in your cart"
+                            : Model.ListItems.Count == 1 ? "1 item"
+                            : $"{Model.ListItems.Count} items")
+                    </div>
+
+                </div>
+            </div>
+            @foreach(var item in Model.ListItems)
+            {
+                <div class="row cart-item" data-product-id="@item.ProductID">
+                    <div class="row main align-items-center">
+                        <div class="col-2"><img class="img-fluid" src="~/uploads/@item.Image"></div>
+                        <div class="col">
+                            <div class="row text-muted">@item.CategoryName</div>
+                            <div class="row">@item.ProductName</div>
+                        </div>
+                        <div class="col d-flex align-items-center">
+                            <button class="btn-change-quantity">-</button>
+                            <input class="border align-content-center" asp-for="@item.Quantity" />
+                            @*<a href="#" class="border">@item.Quantity</a>*@
+                            <button class="btn-change-quantity">+</button>
+                        </div>
+                        <div class="col d-flex justify-content-between"> <span class="price">$ @item.Price</span> <i onclick="deleteCartItem(@item.ProductID)" class="fa-solid fa-trash"></i></div>
+                    </div>
+                </div>
+                totalAmount += item.Price * item.Quantity;
+
+            }
+            
+            
+            <div class="back-to-shop"><a asp-action="customerView" asp-controller="product">&leftarrow;</a><span class="text-muted">Back to shop</span></div>
+        </div>
+        <div class="col-md-4 summary">
+            <div style="border-bottom: 2px solid"><h5><b>Summary</b></h5></div>
+            <div class="row">
+                <div class="col" style="padding-left:0;">Total:</div>
+                <div class="col text-right">$ @totalAmount</div>
+            </div>
+           
+            <form asp-controller="product" asp-action="Checkout">
+                    <label asp-for="@Model.Name"></label>
+                    <input  asp-for="@Model.Name"/>
+                    <span asp-validation-for="@Model.Name" class="text-danger"></span>
+
+                    <label asp-for="@Model.Address"></label>
+                    <input  asp-for="@Model.Address"/>
+                    <span asp-validation-for="@Model.Address" class="text-danger"></span>
+
+
+                    <label asp-for="@Model.Phone"></label>
+                    <input  asp-for="@Model.Phone"/>
+                    <span asp-validation-for="@Model.Phone" class="text-danger"></span>
+
+                    <label asp-for="@Model.Message"></label>
+                    <input asp-for="@Model.Message" />
+                    <span asp-validation-for="@Model.Message" class="text-danger"></span>
+                   @* <select><option class="text-muted">Standard-Delivery- &euro;5.00</option></select>
+                    <p>GIVE CODE</p>
+                    <input id="code" placeholder="Enter your code">*@
+                <button type="submit" style="background-color: whitesmoke; border: 1px solid yellowgreen; width: 100%; margin-top: 20px" class="btn">CHECKOUT</button>
+            </form>
+
+            
+        </div>
+    </div>
+
+</div>
+
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $(".btn-change-quantity").on("click", function (e) {
+                e.preventDefault();
+
+                var inputElement = $(this).siblings("input");
+                var currentValue = parseInt(inputElement.val());
+
+                if (!isNaN(currentValue)) {
+                    var newValue = currentValue + ($(this).text() === "+" ? 1 : -1);
+
+                    if (newValue >= 1) {
+                        inputElement.val(newValue);
+
+                        var price = parseFloat($(this).closest(".main").find(".price").text().replace("$", ""));
+                        debugger;
+                        updateTotal(price, $(this).text() === "+");
+                    }
+                }
+            });
+
+            function updateTotal(price, isIncrement) {
+                var totalElement = $(".summary .col.text-right");
+                var total = parseFloat(totalElement.text().replace("$", ""));
+                debugger;
+                if (isIncrement) {
+                    total += price;
+                } else {
+                    total -= price;
+                }
+                totalElement.text("$ " + total.toFixed(2));
+            }
+        });
+
+        var deleteCartItem = function(id){
+            $.ajax({
+                url: '@Url.Action("DeleteCartItem", "Product")/',
+                type: 'GET',
+                data: { productId: id }
+            })
+                .done(function (response) {
+                    $(`.cart-item[data-product-id="${id}"]`).remove();
+                    $("#countItem").text(response.countItemString);
+                    $("#countItem").text(response.countItemString);
+                    var totalElement = $(".summary .col.text-right");
+                    totalElement.text("$ " + response.total.toFixed(2));
+                })
+                .fail(function (xhr, status, error) {
+                    console.log(error);
+                });
+        }
+    </script>
+}
+
+
+@*
+@{
+
+    Func<int?, string> generateUrl = (int? _pagenumber) =>
+    {
+        return Url.Action("Index", "Product", new { pageNumber = _pagenumber });
+    };
+
+    var datapaging = new
+    {
+        currentPage = Model.PageNumber,
+        countPages = Model.TotalPages,
+        generateUrl = generateUrl
+    };
+}
+<div class = "product-paging">
+    <partial name="_Paging" model="@datapaging" />
+</div>
+*@
+

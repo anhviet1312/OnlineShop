@@ -63,7 +63,10 @@ namespace ShopOnline.Repository
         {
             return await _context.ProductCategories.FindAsync(id);
         }
-
+        public ProductCategory GetById(int id)
+        {
+            return  _context.ProductCategories.Where(x => x.ID == id).FirstOrDefault();
+        }
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();

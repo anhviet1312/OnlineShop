@@ -14,7 +14,7 @@ namespace ShopOnline.Models
         public string CustomerAddress { set; get; }
 
         
-        public string CustomerEmail { set; get; }
+        public string? CustomerEmail { set; get; }
 
         
         public string CustomerMobile { set; get; }

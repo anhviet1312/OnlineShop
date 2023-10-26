@@ -11,6 +11,7 @@ using ShopOnline.Repository;
 using Microsoft.AspNetCore.Identity;
 using ShopOnline.Models.ViewModels;
 using System.Drawing.Printing;
+using System.Text.Json;
 
 namespace ShopOnline.Controllers
 {
@@ -23,6 +24,7 @@ namespace ShopOnline.Controllers
         private readonly ILogger<ProductController> _logger;
         private readonly IProductCategoryRepository _productCategoryRepository;
         private readonly ITagRepository _tagRepository;
+        private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
         private readonly IWebHostEnvironment _environment;
@@ -33,7 +35,7 @@ namespace ShopOnline.Controllers
                                              ITagRepository tagRepository,
                                              IMapper mapper,
                                              UserManager<AppUser> userManager,
-                                             IWebHostEnvironment environment)
+                                             IWebHostEnvironment environment, IOrderRepository orderRepository)
         {
             _context = context;
             _productRepository = productRepository;
@@ -43,6 +45,7 @@ namespace ShopOnline.Controllers
             _mapper = mapper;
             _userManager = userManager;
             _environment = environment;
+            _orderRepository = orderRepository;
         }
         public async Task<ActionResult> Index(int? pageNumber)
         {
@@ -343,6 +346,121 @@ namespace ShopOnline.Controllers
 
                 return RedirectToAction(nameof(Index)); // Redirect to the index view even in case of error
             }
+        }
+
+
+        #region Handel cart 
+        [AllowAnonymous]
+        public async Task< ActionResult> AddToCart(int id, int quantity, decimal price, int categoryId, string image)
+        {
+            List<CartItem> myCart;
+
+            // Check if session is null or not
+            if (HttpContext.Session.GetString("myCart") == null)
+            {
+                // If it's null, create a new list of CartItem
+                myCart = new List<CartItem>();
+            }
+            else
+            {
+                // If it's not null, deserialize the session data into a list of CartItem
+                myCart = JsonSerializer.Deserialize<List<CartItem>>(HttpContext.Session.GetString("myCart"));
+            }
+
+            // Check if the product is already in the cart
+            var existingItem = myCart.FirstOrDefault(item => item.ProductID == id);
+            if (existingItem != null)
+            {
+                // If the product is already in the cart, update the quantity
+                existingItem.Quantity += quantity;
+            }
+            else
+            {
+                // If not, add a new CartItem
+                var product = await _productRepository.GetProductByIdAsync(id);
+                var productCategory = await _productCategoryRepository.GetByIdAsync(categoryId);
+                var cartItem = new CartItem
+                {
+                    ProductID = id,
+                    Quantity = quantity,
+                    Price = price,
+                    Image = image,
+                    CategoryID = categoryId,
+                    ProductName = product.Name,
+                    CategoryName= productCategory.Name,
+                }; 
+                
+                myCart.Add(cartItem);
+            }
+
+            // Serialize and save the updated cart back to the session
+            HttpContext.Session.SetString("myCart", JsonSerializer.Serialize(myCart));
+
+            return RedirectToAction(nameof(Cart));
+        }
+
+        #endregion
+
+        [AllowAnonymous]
+        public async Task<ActionResult> Cart()
+        {
+            List<CartItem> myCart;
+
+            // Check if session is null or not
+            if (HttpContext.Session.GetString("myCart") == null)
+            {
+                // If it's null, create a new list of CartItem
+                myCart = new List<CartItem>();
+            }
+            else
+            {
+                // If it's not null, deserialize the session data into a list of CartItem
+                myCart = JsonSerializer.Deserialize<List<CartItem>>(HttpContext.Session.GetString("myCart"));
+            }
+
+            var model = new Cart();
+            model.ListItems = myCart;
+
+            return View(model);
+        }
+
+        [AllowAnonymous]
+        public ActionResult DeleteCartItem(int productId)
+        {
+            List<CartItem> myCart;
+            myCart = JsonSerializer.Deserialize<List<CartItem>>(HttpContext.Session.GetString("myCart"));
+            var x = myCart.FirstOrDefault(x => x.ProductID == productId);
+            if (x != null)
+            {
+                myCart.Remove(x);
+                HttpContext.Session.SetString("myCart", JsonSerializer.Serialize(myCart));
+            }
+            var countItemString =  myCart.Count == 0 ? "No item in your cart"
+                            : myCart.Count == 1 ? "1 item"
+                            : $"{myCart.Count} items";
+            var totalAmout = 0M;
+            myCart.ForEach(x =>
+            {
+                totalAmout += x.Price * x.Quantity;
+            });
+            var response = new
+            {
+                countItemString = countItemString,
+                total = totalAmout,
+            };
+            return Json(response);
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Checkout()
+        {
+            List<CartItem> myCart = new List<CartItem>();
+            if(HttpContext.Session.GetString("myCart")!=null)
+            myCart = JsonSerializer.Deserialize<List<CartItem>>(HttpContext.Session.GetString("myCart"));
+            return NoContent();
+            
         }
 
     }
