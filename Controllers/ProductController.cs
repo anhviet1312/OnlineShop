@@ -25,17 +25,18 @@ namespace ShopOnline.Controllers
         private readonly IProductCategoryRepository _productCategoryRepository;
         private readonly ITagRepository _tagRepository;
         private readonly IOrderRepository _orderRepository;
+        private readonly IOrderDetailRepository _orderDetailRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
         private readonly IWebHostEnvironment _environment;
         private const int PRODUCT_PER_PAGE = 3;
 
-        public ProductController(ApplicationDbContext context, IProductRepository productRepository, 
+        public ProductController(ApplicationDbContext context, IProductRepository productRepository,
                                              ILogger<ProductController> logger, IProductCategoryRepository productCategoryRepository,
                                              ITagRepository tagRepository,
                                              IMapper mapper,
                                              UserManager<AppUser> userManager,
-                                             IWebHostEnvironment environment, IOrderRepository orderRepository)
+                                             IWebHostEnvironment environment, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository)
         {
             _context = context;
             _productRepository = productRepository;
@@ -46,6 +47,7 @@ namespace ShopOnline.Controllers
             _userManager = userManager;
             _environment = environment;
             _orderRepository = orderRepository;
+            _orderDetailRepository = orderDetailRepository;
         }
         public async Task<ActionResult> Index(int? pageNumber)
         {
@@ -53,7 +55,7 @@ namespace ShopOnline.Controllers
             var categories = await _productCategoryRepository.GetAllAsync();
             var tags = await _tagRepository.GetAllAsync();
             var products = await _productRepository.GetAllAsync();
-            var totalPage = products.Count > 0 ? (products.Count - 1)/PRODUCT_PER_PAGE + 1 : 0;
+            var totalPage = products.Count > 0 ? (products.Count - 1) / PRODUCT_PER_PAGE + 1 : 0;
             int pageNumberValue = pageNumber ?? 1;
             var productsInPage = products
         .Skip((pageNumberValue - 1) * PRODUCT_PER_PAGE)
@@ -71,13 +73,13 @@ namespace ShopOnline.Controllers
         }
 
         [AllowAnonymous]
-        public async Task<ActionResult> CustomerView(int? pageNumber, int ?categoryId,  string? searchKey, string? orderBy, 
+        public async Task<ActionResult> CustomerView(int? pageNumber, int? categoryId, string? searchKey, string? orderBy,
                      decimal? minPrice = 0, decimal? maxPrice = 2000)
         {
             var productViewModel = new ViewCustomerProductModel();
-            
+
             var products = await _productRepository.GetAllAsync();
-            if(categoryId != null) products = products.Where(p => p.CategoryID == categoryId.Value).ToList();
+            if (categoryId != null) products = products.Where(p => p.CategoryID == categoryId.Value).ToList();
             if (!String.IsNullOrEmpty(searchKey))
             {
                 searchKey = searchKey.ToLower();
@@ -111,7 +113,7 @@ namespace ShopOnline.Controllers
             return View();
         }
 
-        
+
         // GET: ProductController/Create
         public async Task<ActionResult> Create()
         {
@@ -195,7 +197,7 @@ namespace ShopOnline.Controllers
                     {
                         System.IO.File.Delete(filePath);
                     }
-                }            
+                }
             }
 
             var categories = await _productCategoryRepository.GetAllAsync();
@@ -220,7 +222,7 @@ namespace ShopOnline.Controllers
             var product = await _productRepository.GetProductByIdAsync(id);
             return Json(product);
         }
-        
+
         // POST: ProductController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -243,7 +245,7 @@ namespace ShopOnline.Controllers
                     // Map the updated data from the createOrUpdate to the existing product
                     string userId = _userManager.GetUserId(User);
                     var user = await _userManager.FindByIdAsync(userId);
-                    
+
                     string fileExtension = Path.GetExtension(createOrUpdate.ImageUpload.FileName);
                     string fileName = $"{user.Id}_{DateTime.Now.Ticks}_{createOrUpdate.ImageUpload.FileName}";
                     fileImage = fileName;
@@ -273,10 +275,10 @@ namespace ShopOnline.Controllers
                         }
                     }
 
-                    
+
                     await _productRepository.UpdateAsync(existingProduct);
 
-                    
+
                     await _productRepository.SaveAsync();
 
                     return RedirectToAction(nameof(Index));
@@ -299,7 +301,7 @@ namespace ShopOnline.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-       
+
         // GET: ProductController/Delete/5
         public ActionResult Delete(int id)
         {
@@ -351,7 +353,7 @@ namespace ShopOnline.Controllers
 
         #region Handel cart 
         [AllowAnonymous]
-        public async Task< ActionResult> AddToCart(int id, int quantity, decimal price, int categoryId, string image)
+        public async Task<ActionResult> AddToCart(int id, int quantity, decimal price, int categoryId, string image)
         {
             List<CartItem> myCart;
 
@@ -387,9 +389,9 @@ namespace ShopOnline.Controllers
                     Image = image,
                     CategoryID = categoryId,
                     ProductName = product.Name,
-                    CategoryName= productCategory.Name,
-                }; 
-                
+                    CategoryName = productCategory.Name,
+                };
+
                 myCart.Add(cartItem);
             }
 
@@ -435,7 +437,7 @@ namespace ShopOnline.Controllers
                 myCart.Remove(x);
                 HttpContext.Session.SetString("myCart", JsonSerializer.Serialize(myCart));
             }
-            var countItemString =  myCart.Count == 0 ? "No item in your cart"
+            var countItemString = myCart.Count == 0 ? "No item in your cart"
                             : myCart.Count == 1 ? "1 item"
                             : $"{myCart.Count} items";
             var totalAmout = 0M;
@@ -454,13 +456,38 @@ namespace ShopOnline.Controllers
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Checkout()
+        public async Task<ActionResult> Checkout(Cart cart)
         {
             List<CartItem> myCart = new List<CartItem>();
-            if(HttpContext.Session.GetString("myCart")!=null)
-            myCart = JsonSerializer.Deserialize<List<CartItem>>(HttpContext.Session.GetString("myCart"));
-            return NoContent();
-            
+            if (HttpContext.Session.GetString("myCart") != null) myCart = JsonSerializer.Deserialize<List<CartItem>>(HttpContext.Session.GetString("myCart"));
+            var user = await _userManager.GetUserAsync(User);
+            Order order = new Order()
+            {
+                CustomerName = cart.Name,
+                CustomerAddress = cart.Address,
+                CustomerMobile = cart.Phone,
+                CustomerMessage = cart.Message,
+                Status = false,
+                PaymentMethod = "Online",
+                PaymentStatus = "Successful",
+                CustomerId = user.Id,
+                CreatedDate = DateTime.UtcNow,
+                CreatedBy = user.UserName,
+             };
+             var orderSaved = await _orderRepository.AddAsync(order);
+             foreach(var item in myCart)
+            {
+                var orderDetail = new OrderDetail
+                {
+                    ProductID = item.ProductID,
+                    OrderID = orderSaved.ID,
+                    Price = item.Price,
+                    Quantity = item.Quantity
+                };
+                await _orderDetailRepository.AddAsync(orderDetail);
+            }
+            HttpContext.Session.Remove("myCart");
+            return RedirectToAction(nameof(Cart));    
         }
 
     }

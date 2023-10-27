@@ -60,9 +60,12 @@
             </div>
            
             <form asp-controller="product" asp-action="Checkout">
+                <div>
                     <label asp-for="@Model.Name"></label>
-                    <input  asp-for="@Model.Name"/>
+                    <input asp-for="@Model.Name" />
                     <span asp-validation-for="@Model.Name" class="text-danger"></span>
+                </div>
+                    
 
                     <label asp-for="@Model.Address"></label>
                     <input  asp-for="@Model.Address"/>

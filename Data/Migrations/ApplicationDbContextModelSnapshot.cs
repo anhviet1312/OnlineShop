@@ -256,7 +256,6 @@ namespace ShopOnline.Data.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("CustomerEmail")
-                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
