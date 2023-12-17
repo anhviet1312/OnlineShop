@@ -39,10 +39,8 @@ namespace ShopOnline.Areas.Identity.Pages
 
 		public string ReturnUrl { get; set; }
 
-		// Xác thực từ dịch vụ ngoài (Googe, Facebook ... bài này chứa thiết lập)
 		public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
-		// Lớp InputModel chứa thông tin Post tới dùng để tạo User
 		public class InputModel
 		{
 			[Required]
@@ -74,7 +72,6 @@ namespace ShopOnline.Areas.Identity.Pages
 			ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 		}
 
-		// Đăng ký tài khoản theo dữ liệu form post tới
 		public async Task<IActionResult> OnPostAsync(string? returnURL = null)
 		{
 			returnURL = returnURL ?? Url.Content("~/");
@@ -88,7 +85,6 @@ namespace ShopOnline.Areas.Identity.Pages
 			ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 			if (ModelState.IsValid)
 			{
-				// Tạo AppUser sau đó tạo User mới (cập nhật vào db)
 				var user = new AppUser { UserName = Input.UserName, Email = Input.Email };
 				var result = await _userManager.CreateAsync(user, Input.Password);
 
@@ -96,14 +92,13 @@ namespace ShopOnline.Areas.Identity.Pages
 				{
 					_logger.LogInformation("Vừa tạo mới tài khoản thành công.");
 
-					// phát sinh token theo thông tin user để xác nhận email
-					// mỗi user dựa vào thông tin sẽ có một mã riêng, mã này nhúng vào link
-					// trong email gửi đi để người dùng xác nhận
+					// phát sinh token
+	
 					var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 					code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
 					// callbackUrl = /Account/ConfirmEmail?userId=useridxx&code=codexxxx
-					// Link trong email người dùng bấm vào, nó sẽ gọi Page: /Acount/ConfirmEmail để xác nhận
+					// Link trong email Page: /Acount/ConfirmEmail
 					var callbackUrl = Url.Page(
 						"/ConfirmEmail",
 						pageHandler: null,
@@ -122,12 +117,12 @@ namespace ShopOnline.Areas.Identity.Pages
 					}
 					else
 					{
-						// Không cần xác thực - đăng nhập luôn
+						// Không cần xác thực
 						await _signInManager.SignInAsync(user, isPersistent: false);
 						return LocalRedirect(returnURL);
 					}
 				}
-				// Có lỗi, đưa các lỗi thêm user vào ModelState để hiện thị ở html heleper: asp-validation-summary
+				// add lỗi vào model state
 				foreach (var error in result.Errors)
 				{
 					ModelState.AddModelError(string.Empty, error.Description);

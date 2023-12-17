@@ -5,9 +5,9 @@ using Newtonsoft.Json.Serialization;
 using System.Runtime.CompilerServices;
 using ShopOnline.Helper.Validate;
 
-namespace ShopOnline.Models.CreateModels
+namespace ShopOnline.Models.EditModels
 {
-    public class CreateProductDto
+    public class EditProductDto
     {
         [Required]
         [MaxLength(256)]
@@ -19,8 +19,7 @@ namespace ShopOnline.Models.CreateModels
 
         [Required]
         public int CategoryID { get; set; }
-
-        [Required(ErrorMessage="Choose 1 file image")]
+        
         [DataType(DataType.Upload)]
         [CheckFileExtensions(Extensions = "png,jpg,jpeg")]
         [Display(Name="Image")]

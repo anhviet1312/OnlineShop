@@ -7,15 +7,18 @@ using ShopOnline.Data;
 using ShopOnline.Interface;
 using ShopOnline.Models;
 using ShopOnline.Models.CreateModels;
+using ShopOnline.Models.EditModels;
 using ShopOnline.Repository;
 using Microsoft.AspNetCore.Identity;
 using ShopOnline.Models.ViewModels;
 using System.Drawing.Printing;
 using System.Text.Json;
+using Microsoft.AspNetCore.SignalR;
+using ShopOnline.Hubs;
 
 namespace ShopOnline.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class ProductController : Controller
     {
         // GET: ProductController
@@ -26,6 +29,7 @@ namespace ShopOnline.Controllers
         private readonly ITagRepository _tagRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
+        private readonly IHubContext<UpdateOrderHub> _orderhubs;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
         private readonly IWebHostEnvironment _environment;
@@ -35,7 +39,7 @@ namespace ShopOnline.Controllers
                                              ILogger<ProductController> logger, IProductCategoryRepository productCategoryRepository,
                                              ITagRepository tagRepository,
                                              IMapper mapper,
-                                             UserManager<AppUser> userManager,
+                                             UserManager<AppUser> userManager, IHubContext<UpdateOrderHub> orderhubs,
                                              IWebHostEnvironment environment, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository)
         {
             _context = context;
@@ -48,7 +52,9 @@ namespace ShopOnline.Controllers
             _environment = environment;
             _orderRepository = orderRepository;
             _orderDetailRepository = orderDetailRepository;
+            _orderhubs= orderhubs;
         }
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Index(int? pageNumber)
         {
             var productViewModel = new ViewProductModel();
@@ -79,14 +85,18 @@ namespace ShopOnline.Controllers
             var productViewModel = new ViewCustomerProductModel();
 
             var products = await _productRepository.GetAllAsync();
+
+            var topSixNewestProducts =await _productRepository.TopSixNewestProducts();
+            var productCategories = await _productCategoryRepository.GetAllAsync();
             if (categoryId != null) products = products.Where(p => p.CategoryID == categoryId.Value).ToList();
-            if (!String.IsNullOrEmpty(searchKey))
+            if (!string.IsNullOrEmpty(searchKey))
             {
                 searchKey = searchKey.ToLower();
-                products = products.Where(p => p.Name.ToLower().Contains(searchKey) || p.Description.ToLower().Contains(searchKey)).ToList();
+                products = products.Where(p => p.Name.ToLower().Contains(searchKey) || p.Description.ToLower().Contains(searchKey)
+                                                || p.Alias.ToLower().Contains(searchKey)).ToList();
             }
             products = products.Where(p => p.Price >= minPrice && p.Price <= maxPrice).ToList();
-            if (!String.IsNullOrEmpty(orderBy))
+            if (!string.IsNullOrEmpty(orderBy))
             {
                 if (orderBy.ToLower().Equals("asc")) products = products.OrderBy(p => p.Price).ToList();
                 else products = products.OrderByDescending(p => p.Price).ToList();
@@ -104,6 +114,8 @@ namespace ShopOnline.Controllers
             productViewModel.MinPrice = minPrice;
             productViewModel.MaxPrice = maxPrice;
             productViewModel.OrderBy = orderBy;
+            productViewModel.Top6NewestProducts = topSixNewestProducts;
+            productViewModel.ProductCategories =(List<ProductCategory>) productCategories;
             return View(productViewModel);
         }
 
@@ -115,6 +127,7 @@ namespace ShopOnline.Controllers
 
 
         // GET: ProductController/Create
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create()
         {
             var categories = await _productCategoryRepository.GetAllAsync();
@@ -133,6 +146,7 @@ namespace ShopOnline.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create(CreateProductDto productDto)
         {
             string fileImage = "";
@@ -160,6 +174,7 @@ namespace ShopOnline.Controllers
                         product.UpdatedDate = DateTime.UtcNow;
                         product.UpdatedBy = user.UserName;
                         product.Image = fileName;
+                        product.ViewCount = 0;
 
                         if (productDto.ListSelectedTags != null)
                         {
@@ -217,24 +232,37 @@ namespace ShopOnline.Controllers
             return View(productDto);
         }
         // GET: ProductController/Edit/5
-        public async Task<ActionResult> Edit(int id)
+        public async Task<PartialViewResult> Edit(int id)
         {
-            var product = await _productRepository.GetProductByIdAsync(id);
-            return Json(product);
+            var model = await _productRepository.GetProductByIdWithListTagsAsync(id);
+            var modelDto = _mapper.Map<EditProductDto>(model);
+            modelDto.ListCategories = (List<ProductCategory>) await _productCategoryRepository.GetAllAsync();
+            modelDto.ListTags = (List<Tag>) await _tagRepository.GetAllAsync();
+            modelDto.ListSelectedTags = new List<string>();
+            foreach (var item in model.ProductTags)
+            {
+                modelDto.ListSelectedTags.Add(item.TagID);
+            }
+            ViewBag.Image = model.Image;
+            ViewBag.Id = model.ID;
+            return PartialView("_EditProduct" , modelDto);
         }
 
         // POST: ProductController/Edit/5
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(int productid, CreateProductDto createOrUpdate)
+        public async Task<ActionResult> Edit(int productid, EditProductDto createOrUpdate)
         {
             string fileImage = "";
+            var existingProduct = await _productRepository.GetProductByIdWithListTagsAsync(productid);
+            if (existingProduct == null) return NotFound();
             try
             {
                 if (ModelState.IsValid)
                 {
                     // Get the existing product from the repository
-                    var existingProduct = await _productRepository.GetProductByIdWithListTagsAsync(productid);
+                    
 
                     if (existingProduct == null)
                     {
@@ -245,16 +273,28 @@ namespace ShopOnline.Controllers
                     // Map the updated data from the createOrUpdate to the existing product
                     string userId = _userManager.GetUserId(User);
                     var user = await _userManager.FindByIdAsync(userId);
+                    string fileName = "";
+                    if (createOrUpdate.ImageUpload != null)
+                        {
+                            string fileExtension = Path.GetExtension(createOrUpdate.ImageUpload.FileName);
+                            fileName = $"{user.Id}_{DateTime.Now.Ticks}_{createOrUpdate.ImageUpload.FileName}";
+                            fileImage = fileName;
+                            string filePath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
 
-                    string fileExtension = Path.GetExtension(createOrUpdate.ImageUpload.FileName);
-                    string fileName = $"{user.Id}_{DateTime.Now.Ticks}_{createOrUpdate.ImageUpload.FileName}";
-                    fileImage = fileName;
-                    string filePath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await createOrUpdate.ImageUpload.CopyToAsync(fileStream);
+                            using (var fileStream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await createOrUpdate.ImageUpload.CopyToAsync(fileStream);
+                            }
+                        if (!string.IsNullOrEmpty(existingProduct.Image))
+                        {
+                            string existingFilePath = Path.Combine(_environment.WebRootPath, "uploads", existingProduct.Image);
+                            if (System.IO.File.Exists(existingFilePath))
+                            {
+                                System.IO.File.Delete(existingFilePath);
+                            }
+                        }
                     }
+                    
                     // Set the UpdatedDate and UpdatedBy fields
                     _mapper.Map(createOrUpdate, existingProduct);
                     existingProduct.UpdatedDate = DateTime.UtcNow;
@@ -275,9 +315,7 @@ namespace ShopOnline.Controllers
                         }
                     }
 
-
                     await _productRepository.UpdateAsync(existingProduct);
-
 
                     await _productRepository.SaveAsync();
 
@@ -311,6 +349,7 @@ namespace ShopOnline.Controllers
         // POST: ProductController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(int? id)
         {
             try
@@ -322,6 +361,14 @@ namespace ShopOnline.Controllers
                 }
 
                 // Get the existing product from the repository
+                var listOrderDetail = _orderDetailRepository.GetOrderDetalsByProductId(id.Value);
+                if(listOrderDetail != null)
+                {
+                    foreach(var odt in listOrderDetail)
+                    {
+                        _orderDetailRepository.Delete(odt);
+                    }
+                }
                 var existingProduct = await _productRepository.GetProductByIdAsync(id.Value);
 
                 if (existingProduct == null)
@@ -329,6 +376,7 @@ namespace ShopOnline.Controllers
                     // If the product doesn't exist, return not found
                     return NotFound();
                 }
+
 
                 // Delete the product from the repository
                 await _productRepository.DeleteAsync(existingProduct.ID);
@@ -453,13 +501,16 @@ namespace ShopOnline.Controllers
             return Json(response);
         }
 
-        [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Checkout(Cart cart)
         {
             List<CartItem> myCart = new List<CartItem>();
             if (HttpContext.Session.GetString("myCart") != null) myCart = JsonSerializer.Deserialize<List<CartItem>>(HttpContext.Session.GetString("myCart"));
+            if(myCart.Count == 0)
+            {
+                return RedirectToAction(nameof(Cart));
+            }
             var user = await _userManager.GetUserAsync(User);
             Order order = new Order()
             {
@@ -485,10 +536,38 @@ namespace ShopOnline.Controllers
                     Quantity = item.Quantity
                 };
                 await _orderDetailRepository.AddAsync(orderDetail);
+                Product currentP = await _productRepository.GetProductByIdAsync(item.ProductID);
+                currentP.Quantity -= item.Quantity;
+                await _productRepository.UpdateAsync(currentP);
             }
             HttpContext.Session.Remove("myCart");
             return RedirectToAction(nameof(Cart));    
         }
+        [Authorize]
+        public async Task<ActionResult> Order(string id)
+        {
+            
+            var orders = _orderRepository.GetAllOrderByUserId(id);
+            return View(orders);
+        }
 
+        [Authorize]
+        public async Task<ActionResult> OrderDetail(int orderId)
+        {
+            
+            var user = await _userManager.GetUserAsync(User);
+            var order = _orderRepository.GetById(orderId);
+            if(order == null)
+            {
+              return Redirect("/identity/errornotfound");
+            }
+            if(user.Id != order.CustomerId)
+            {
+                return Redirect("/identity/accessdenied");
+            }
+            var orderDetails = _orderRepository.GetAllOrderDetails(orderId);
+            return View(orderDetails);
+        }
+      
     }
 }

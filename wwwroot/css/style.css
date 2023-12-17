@@ -668,13 +668,13 @@ ol {
 	content: "";
 }
 
-.hero__search__form form .hero__search__categories span {
+.hero__search__form .hero__search__categories span {
 	position: absolute;
 	right: 14px;
 	top: 14px;
 }
 
-.hero__search__form form input {
+.hero__search__form  input {
 	width: 70%;
 	border: none;
 	height: 48px;
@@ -683,11 +683,11 @@ ol {
 	padding-left: 20px;
 }
 
-.hero__search__form form input::placeholder {
+.hero__search__form input::placeholder {
 	color: #b2b2b2;
 }
 
-.hero__search__form form button {
+.hero__search__form button {
 	position: absolute;
 	right: 0;
 	top: -1px;
@@ -1096,13 +1096,17 @@ ol {
 .sidebar__item ul li {
 	list-style: none;
 }
+	.sidebar__item ul li.active {
+		background-color: #8b9dac;
+	}
 
-.sidebar__item ul li a {
-	font-size: 16px;
-	color: #1c1c1c;
-	line-height: 39px;
-	display: block;
-}
+	.sidebar__item ul li a {
+		font-size: 16px;
+		color: #1c1c1c;
+		line-height: 39px;
+		display: block;
+		padding-left: 10px;
+	}
 
 .sidebar__item .latest-product__text {
 	position: relative;
@@ -1254,7 +1258,7 @@ ol {
 -----------------------*/
 
 .product {
-	padding-top: 80px;
+	padding-top: 20px;
 	padding-bottom: 80px;
 }
 

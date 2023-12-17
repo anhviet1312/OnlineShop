@@ -25,6 +25,10 @@
                         asp-page="./AddUserRole">
                         Update role
                     </button>
+                    <button name="Input.ID" value="@user.Id" class="btn btn-primary btn-sm"
+                        asp-action="order" asp-controller="product" asp-route-id="@user.Id">
+                        View list orders
+                    </button>
                 </form>
             </td>
         </tr>

@@ -32,5 +32,10 @@ namespace ShopOnline.Repository
             _context.SaveChanges();
             return orderDetail;
         }
+
+        public List<OrderDetail> GetOrderDetalsByProductId(int id)
+        {
+            return _context.OrderDetails.Where(x => x.ProductID == id).ToList();
+        }
     }
 }

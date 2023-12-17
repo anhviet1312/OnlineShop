@@ -5,6 +5,10 @@ namespace ShopOnline.Models.ViewModels
     public class ViewCustomerProductModel
     {
         public List<Product> Products { get; set;} = new List<Product>();
+
+        public List<Product> Top6NewestProducts { get; set; } = new List<Product>();
+
+        public List<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
         public int ? TotalPages { get; set; }
         public int ? PageNumber { get; set; }
 

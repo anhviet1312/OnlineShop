@@ -9,6 +9,8 @@ namespace ShopOnline.Interface
         OrderDetail Update(OrderDetail orderDetail);
 
         OrderDetail Delete(OrderDetail orderDetail);
+
+        List<OrderDetail> GetOrderDetalsByProductId(int id);
     }
 
 }

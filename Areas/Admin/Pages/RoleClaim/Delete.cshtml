@@ -1,12 +1,12 @@
 ﻿@page
 @model ShopOnline.Areas.Admin.Pages.RoleClaim.DeleteModel
 @{
-    ViewData["Title"] = "Xóa Claim";
+    ViewData["Title"] = "Delete Claim";
 }
 
-<h1>Xóa</h1>
+<h1>Delete</h1>
 
-<h3>Có chắc chắn xóa claim?</h3>
+<h3>Are your sure to delete this claim?</h3>
 <div>
     <h4>Claim</h4>
     <hr />
@@ -28,6 +28,6 @@
     <form method="post">
         <input type="hidden" asp-for="EditClaim.Id" />
         <input type="submit" value="Xóa" class="btn btn-danger" /> |
-        <a asp-page="./Index" asp-route-roleid="@Model.role.Id">Quay lại danh sách claim</a>
+        <a asp-page="./Index" asp-route-roleid="@Model.role.Id">Back to list claim</a>
     </form>
 </div>

@@ -1,4 +1,5 @@
-﻿using ShopOnline.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using ShopOnline.Data;
 using ShopOnline.Interface;
 using ShopOnline.Models;
 
@@ -25,12 +26,24 @@ namespace ShopOnline.Repository
 
         public List<OrderDetail> GetAllOrderDetails(int id)
         {
-            return _context.OrderDetails.Where(x => x.OrderID == id).ToList();
+            return _context.OrderDetails.Where(x => x.OrderID == id).Include(od => od.Product).Include(od=>od.Order).ToList();
         }
 
         public Order GetById(int id)
         {
             return _context.Orders.FirstOrDefault(x => x.ID == id);
+        }
+
+        public List<Order> GetAllOrderByUserId(string id)
+        {
+            return _context.Orders.Where(x => x.CustomerId == id).ToList(); 
+        }
+
+        public Order Update(Order order)
+        {
+            _context.Orders.Update(order);
+            _context.SaveChanges();
+            return order;
         }
     }
 }
