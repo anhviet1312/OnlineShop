@@ -64,6 +64,12 @@ builder.Services.AddSession(options =>
    // options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+builder.Services.AddAuthentication().AddGoogle(googleOptions =>
+{
+    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    googleOptions.CallbackPath = "/dang-nhap-tu-google";
+});
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("StaffPolicy", policy =>
