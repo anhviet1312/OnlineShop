@@ -9,7 +9,9 @@ namespace ShopOnline.Interface
 
         Task<Order> AddAsync(Order order);
         List<OrderDetail> GetAllOrderDetails(int id);
+        List<Order> GetAllOrderByUserId(string id);
 
+        Order Update(Order order);  
         
     }
 }

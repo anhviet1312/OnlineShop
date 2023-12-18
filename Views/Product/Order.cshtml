@@ -1,0 +1,108 @@
+﻿@model IEnumerable<ShopOnline.Models.Order>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+@{
+    ViewData["Title"] = "Order";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Date
+            </th>
+            <th>
+                Name
+            </th>
+            <th>
+                Address
+            </th>
+            <th>
+                Mobile
+            </th>
+            <th>
+                Message
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PaymentMethod)
+            </th>
+            
+
+            <th>
+                @Html.DisplayNameFor(model => model.PaymentStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Status)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                    @Html.DisplayFor(modelItem => item.CreatedDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CustomerName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CustomerAddress)
+            </td>
+
+            <td>
+                @Html.DisplayFor(modelItem => item.CustomerMobile)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CustomerMessage)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PaymentMethod)
+            </td>
+            
+
+            <td>
+                @Html.DisplayFor(modelItem => item.PaymentStatus)
+            </td>
+            <td id="status_@item.ID">
+                    @(item.Status ? "Completed" : "Delivering")
+            </td>
+
+            <td>
+                <a asp-controller="Product" asp-action="OrderDetail" asp-route-orderId="@item.ID">Details</a>
+                @{
+                        if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                        {
+                          <button id="btn_setStatus_@item.ID" onclick="setStatusOrder(@item.ID)" class="btn btn-primary">@(item.Status ? "Set delivering" : "Set status completed")</button>
+                        }
+                }
+              
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+@section Scripts{
+	<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+	<script src="~/lib/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        var connection = new signalR.HubConnectionBuilder().withUrl("/product/order").build();
+        connection.start();
+        connection.on("UpdateStatusOrder" , (id, status)=>{
+            var e = $(`#status_${id}`);
+            if (status == false) e.text('Delivering')
+            else e.text('Completed');
+            if (status == false) $(`#btn_setStatus_${id}`).text('Set status completed')
+            else $(`#btn_setStatus_${id}`).text('Set delivering')
+            
+        });
+
+
+        function setStatusOrder(id){
+            connection.invoke("UpdateStatusOrder", id)
+        }
+    </script>
+}

@@ -87,8 +87,7 @@ namespace ShopOnline.Areas.Identity.Pages
 
                 if (!result.Succeeded)
                 {
-                    // Thất bại username/password -> tìm user theo email, nếu thấy thì thử đăng nhập
-                    // bằng user tìm được
+                    // Thất bại username/password -> tìm user theo email
                     var user = await _userManager.FindByEmailAsync(Input.UserNameOrEmail);
                     if (user != null)
                     {

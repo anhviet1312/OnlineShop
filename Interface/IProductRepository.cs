@@ -7,6 +7,8 @@ namespace ShopOnline.Interface
     public interface IProductRepository
     {
         Task<Product> GetProductByIdAsync(int id);
+
+        Task<List<Product>> TopSixNewestProducts();
         Task<Product> GetProductByIdWithListTagsAsync(int id);
         Task<Product> AddAsync(Product p);
 
@@ -17,6 +19,7 @@ namespace ShopOnline.Interface
         Task<List<Product>> GetAllAsync();
 
         Task<List<Product>> GetListProductFilterAsync(string keyword, int page, int pageSize, string sort);
+
 
         Task SaveAsync();
     }

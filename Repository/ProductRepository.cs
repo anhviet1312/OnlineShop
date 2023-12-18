@@ -66,6 +66,14 @@ namespace ShopOnline.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<Product>> TopSixNewestProducts()
+        {
+            return await _context.Products
+        .OrderByDescending(p => p.CreatedDate)  
+        .Take(6)  
+        .ToListAsync();
+        }
+
         public async Task UpdateAsync(Product product)
         {
             _context.Entry(product).State = EntityState.Modified;

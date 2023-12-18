@@ -7,7 +7,8 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/product/cart/cart_style.css" type="text/css">
-     <script src="https://kit.fontawesome.com/d212847f69.js" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/d212847f69.js" crossorigin="anonymous"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AUWhI4daXRzzzPuCLHcmnB7VhWvUd_RSJ0FQXeoOgAC7TQwGClUvVkVTIh4O868Uje6Ql2_uSbWkTxNE&components=buttons"></script>
 }
 @{
     var totalAmount = 0M;
@@ -59,39 +60,124 @@
                 <div class="col text-right">$ @totalAmount</div>
             </div>
            
-            <form asp-controller="product" asp-action="Checkout">
+            <form id="checkoutForm" asp-controller="product" asp-action="Checkout">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div>
                     <label asp-for="@Model.Name"></label>
-                    <input  asp-for="@Model.Name"/>
+                    <input asp-for="@Model.Name" />
                     <span asp-validation-for="@Model.Name" class="text-danger"></span>
-
+                </div>
+                    
+                <div>
                     <label asp-for="@Model.Address"></label>
-                    <input  asp-for="@Model.Address"/>
+                    <input asp-for="@Model.Address" />
                     <span asp-validation-for="@Model.Address" class="text-danger"></span>
-
-
+                </div>
+                    
+                <div>
                     <label asp-for="@Model.Phone"></label>
-                    <input  asp-for="@Model.Phone"/>
+                    <input asp-for="@Model.Phone" />
                     <span asp-validation-for="@Model.Phone" class="text-danger"></span>
+                </div>
 
+                    
+                <div>
                     <label asp-for="@Model.Message"></label>
                     <input asp-for="@Model.Message" />
                     <span asp-validation-for="@Model.Message" class="text-danger"></span>
-                   @* <select><option class="text-muted">Standard-Delivery- &euro;5.00</option></select>
-                    <p>GIVE CODE</p>
-                    <input id="code" placeholder="Enter your code">*@
+                </div>
+                    
                 <button type="submit" style="background-color: whitesmoke; border: 1px solid yellowgreen; width: 100%; margin-top: 20px" class="btn">CHECKOUT</button>
             </form>
 
             
         </div>
-    </div>
 
+    </div>
+    
+    <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Checkout</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+             <div class="modal-body">
+                        <div id="paypal-button-container" style="max-width:1000px;"></div>
+
+             </div>  
+                @*<div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Confirm</button>
+                </div>*@
+        </div>
+    </div>
+</div>
 </div>
 
 
 @section Scripts{
     <script>
+   //     paypal.Buttons({
+   //     style: {
+   //     disableMaxWidth: true
+   //},
+   //         onApprove: function (data, actions) {
+   //             // Capture the funds when the customer approves the payment
+   //             return actions.order.capture().then(function (details) {
+   //                 // Handle successful payment
+   //                 document.getElementById("btnSubmit").disabled = false;
+   //                 alert('Transaction completed by ' + details.payer.name.given_name);
+   //             });
+   //         }
+   //}).render('#paypal-button-container');
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+
+    <script>
+    document.getElementById('checkoutForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    // Check if the form is valid based on jQuery Validation rules
+    if ($('#checkoutForm').valid()) {
+
+                var totalAmount = parseFloat($(".summary .col.text-right").text().replace("$", ""));
+ 
+                    paypal.Buttons({
+                        createOrder: function (data, actions) {
+                            // Set up the transaction with the fetched total amount
+                            return actions.order.create({
+                                purchase_units: [{
+                                    amount: {
+                                        value: totalAmount.toFixed(2) // Use the fetched total amount
+                                    }
+                                }]
+                            });
+                        },
+
+                    style: {
+                        disableMaxWidth: true
+                    },
+                    onApprove: function (data, actions) {
+                        // Capture the funds when the customer approves the payment
+                        return actions.order.capture().then(function (details) {
+                        document.getElementById('checkoutForm').submit(); 
+                    });
+                    }
+                    }).render('#paypal-button-container');
+                     $('#checkoutModal').modal('show');
+    } else {
+        
+    }
+});
+
         $(document).ready(function () {
+            //$('#checkoutForm').submit(function (event) {
+            //    event.preventDefault(); // Prevent default form submission    
+            // }
+            //});
+
             $(".btn-change-quantity").on("click", function (e) {
                 e.preventDefault();
 

@@ -14,7 +14,7 @@ namespace ShopOnline.Data.Configurations
             entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.CustomerName).HasMaxLength(256).IsRequired();
             entity.Property(e => e.CustomerAddress).HasMaxLength(256).IsRequired();
-            entity.Property(e => e.CustomerEmail).HasMaxLength(256).IsRequired();
+            entity.Property(e => e.CustomerEmail).HasMaxLength(256);
             entity.Property(e => e.CustomerMobile).HasMaxLength(50).IsRequired();
             entity.Property(e => e.CustomerMessage).HasMaxLength(256).IsRequired();
             entity.Property(e => e.PaymentMethod).HasMaxLength(256);
